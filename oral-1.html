@@ -925,6 +925,10 @@
         animation-delay: .045s;
       }
 
+      .mobile-actions-panel button:nth-child(3) {
+        animation-delay: .09s;
+      }
+
       .main {
         width: 100%;
         min-height: calc(100dvh - 54px);
@@ -1439,6 +1443,7 @@
       </div>
       <div class="top-actions">
         <button id="exportCsvBtn" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
+        <button id="shareCsvBtn" class="button-secondary" title="用手機分享盤點 CSV">分享 CSV</button>
         <button id="adminToggleBtn" class="button-secondary" title="切換後台設定">後台設定</button>
       </div>
     </header>
@@ -1447,6 +1452,7 @@
       <summary aria-label="開啟功能選單"><span class="menu-icon" aria-hidden="true"></span></summary>
       <div class="mobile-actions-panel">
         <button id="mobileExportCsvBtn" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
+        <button id="mobileShareCsvBtn" class="button-secondary" title="用手機分享盤點 CSV">分享 CSV</button>
         <button id="mobileAdminToggleBtn" class="button-secondary" title="切換後台設定">後台設定</button>
       </div>
     </details>
@@ -1670,7 +1676,9 @@
       workPanel: $('#workPanel'),
       closeDrugListBtn: $('#closeDrugListBtn'),
       exportCsvBtn: $('#exportCsvBtn'),
+      shareCsvBtn: $('#shareCsvBtn'),
       mobileExportCsvBtn: $('#mobileExportCsvBtn'),
+      mobileShareCsvBtn: $('#mobileShareCsvBtn'),
       adminToggleBtn: $('#adminToggleBtn'),
       mobileAdminToggleBtn: $('#mobileAdminToggleBtn'),
       adminPanel: $('#adminPanel'),
@@ -2255,7 +2263,7 @@
       autoSaveDrugEntry();
     }
 
-    function exportCsv() {
+    function createCsvExport() {
       const rows = [['藥品名稱', '數量', '效期']];
       config.locations.forEach((location) => {
         location.items.forEach((item, index) => {
@@ -2268,11 +2276,49 @@
         });
       });
 
+      return {
+        fileName: safeFileName(config.cabinetName) + '_盤點結果.csv',
+        text: '\ufeff' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n'),
+        type: 'text/csv;charset=utf-8'
+      };
+    }
+
+    function exportCsv() {
+      const csv = createCsvExport();
       downloadText(
-        safeFileName(config.cabinetName) + '_盤點結果.csv',
-        '\ufeff' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n'),
-        'text/csv;charset=utf-8'
+        csv.fileName,
+        csv.text,
+        csv.type
       );
+    }
+
+    async function shareCsv() {
+      const csv = createCsvExport();
+      if (typeof File === 'undefined') {
+        exportCsv();
+        showToast('此瀏覽器不支援檔案分享，已改為下載 CSV');
+        return;
+      }
+
+      const file = new File([csv.text], csv.fileName, { type: csv.type });
+      const shareData = {
+        files: [file],
+        title: config.cabinetName + ' 盤點結果',
+        text: config.cabinetName + ' 盤點結果 CSV'
+      };
+
+      if (navigator.canShare?.(shareData) && navigator.share) {
+        try {
+          await navigator.share(shareData);
+          showToast('已開啟分享選單');
+          return;
+        } catch (error) {
+          if (error?.name === 'AbortError') return;
+        }
+      }
+
+      exportCsv();
+      showToast('此瀏覽器不支援檔案分享，已改為下載 CSV');
     }
 
     function exportConfig() {
@@ -2647,9 +2693,14 @@
     dom.adminCloseBtn.addEventListener('click', closeAdminPanel);
 
     dom.exportCsvBtn.addEventListener('click', exportCsv);
+    dom.shareCsvBtn.addEventListener('click', shareCsv);
     dom.mobileExportCsvBtn.addEventListener('click', () => {
       exportCsv();
       dom.mobileExportCsvBtn.closest('details')?.removeAttribute('open');
+    });
+    dom.mobileShareCsvBtn.addEventListener('click', () => {
+      shareCsv();
+      dom.mobileShareCsvBtn.closest('details')?.removeAttribute('open');
     });
     dom.exportConfigBtn.addEventListener('click', exportConfig);
     dom.importConfigBtn.addEventListener('click', () => dom.importConfigInput.click());
