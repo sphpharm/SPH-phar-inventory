@@ -2279,7 +2279,8 @@
       return {
         fileName: safeFileName(config.cabinetName) + '_盤點結果.csv',
         text: '\ufeff' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n'),
-        type: 'text/csv;charset=utf-8'
+        downloadType: 'text/csv;charset=utf-8',
+        shareTypes: ['text/csv', 'text/plain', 'application/vnd.ms-excel']
       };
     }
 
@@ -2288,7 +2289,7 @@
       downloadText(
         csv.fileName,
         csv.text,
-        csv.type
+        csv.downloadType
       );
     }
 
@@ -2300,20 +2301,24 @@
         return;
       }
 
-      const file = new File([csv.text], csv.fileName, { type: csv.type });
-      const shareData = {
-        files: [file],
-        title: config.cabinetName + ' 盤點結果',
-        text: config.cabinetName + ' 盤點結果 CSV'
-      };
+      if (navigator.share) {
+        for (const type of csv.shareTypes) {
+          const file = new File([csv.text], csv.fileName, { type });
+          const shareData = {
+            files: [file],
+            title: config.cabinetName + ' 盤點結果',
+            text: config.cabinetName + ' 盤點結果 CSV'
+          };
 
-      if (navigator.canShare?.(shareData) && navigator.share) {
-        try {
-          await navigator.share(shareData);
-          showToast('已開啟分享選單');
-          return;
-        } catch (error) {
-          if (error?.name === 'AbortError') return;
+          if (navigator.canShare?.(shareData)) {
+            try {
+              await navigator.share(shareData);
+              showToast('已開啟分享選單');
+              return;
+            } catch (error) {
+              if (error?.name === 'AbortError') return;
+            }
+          }
         }
       }
 
