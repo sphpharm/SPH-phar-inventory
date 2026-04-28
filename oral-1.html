@@ -1,0 +1,2740 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>智慧藥櫃離線盤點</title>
+  <style>
+    :root {
+      --bg: #E9E9E7;
+      --panel: #F4F4F2;
+      --ink: #111111;
+      --muted: #7A7A77;
+      --line: #D5D5D1;
+      --line-strong: #C6C6C1;
+      --blue: #111111;
+      --blue-dark: #000000;
+      --green: #9FAF9F;
+      --amber: #b7791f;
+      --red: #c2413a;
+      --shadow: 0 18px 44px rgba(39, 36, 30, .12);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: var(--radius);
+      cursor: pointer;
+      min-height: 44px;
+      padding: 0 14px;
+      color: #fff;
+      background: var(--blue);
+      transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+    }
+
+    button:hover { background: var(--blue-dark); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      outline: 3px solid rgba(51, 65, 85, .22);
+      outline-offset: 2px;
+    }
+
+    .button-secondary {
+      color: var(--ink);
+      background: #F4F4F2;
+      border: 1px solid #dad7d1;
+    }
+
+    .button-secondary:hover { background: #E3E3DF; }
+
+    .button-danger {
+      background: var(--red);
+    }
+
+    .button-danger:hover {
+      background: #a8322c;
+    }
+
+    .button-small {
+      min-height: 36px;
+      padding: 0 10px;
+      font-size: 14px;
+    }
+
+    .icon-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      min-width: 38px;
+      min-height: 38px;
+      padding: 0;
+      color: #111111;
+      background: #F28C28;
+      border: 1px solid rgba(242, 140, 40, .92);
+      border-radius: 999px;
+      box-shadow: 0 8px 18px rgba(242, 140, 40, .22), inset 0 1px 0 rgba(255, 255, 255, .34);
+      font-size: 21px;
+      font-weight: 840;
+      line-height: 1;
+    }
+
+    .icon-action-btn:hover {
+      background: #E57F1F;
+    }
+
+    .icon-action-btn:active {
+      background: #D97318;
+      box-shadow: 0 5px 12px rgba(242, 140, 40, .18), inset 0 1px 0 rgba(255, 255, 255, .24);
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px clamp(14px, 3vw, 28px);
+      background: rgba(244, 244, 242, .94);
+      border-bottom: 0;
+      box-shadow: 0 8px 24px rgba(17, 17, 17, .055);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(19px, 3vw, 25px);
+      line-height: 1.12;
+      letter-spacing: 0;
+      font-weight: 780;
+    }
+
+    .brand span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    .save-monitor {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-left: auto;
+      width: 30px;
+      height: 24px;
+      padding: 0;
+      color: #67635d;
+      background: #E2E2DE;
+      border: 1px solid rgba(255, 255, 255, .74);
+      border-radius: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .86), 0 8px 18px rgba(17, 17, 17, .07);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .save-lamp {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #D98935;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, .58), 0 0 0 2px rgba(217, 137, 53, .08), 0 0 7px rgba(217, 137, 53, .24);
+      opacity: .76;
+    }
+
+    .save-monitor.is-saving .save-lamp {
+      animation: saveLampPulse 820ms steps(1, end) 1;
+    }
+
+    @keyframes saveLampPulse {
+      0%, 100% {
+        opacity: .76;
+        transform: scale(1);
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, .58), 0 0 0 2px rgba(217, 137, 53, .08), 0 0 7px rgba(217, 137, 53, .24);
+      }
+      9%, 23%, 37%, 62% {
+        opacity: .32;
+        transform: scale(.94);
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, .28), 0 0 0 1px rgba(217, 137, 53, .05), 0 0 4px rgba(217, 137, 53, .12);
+      }
+      14%, 30%, 48%, 70% {
+        opacity: .96;
+        transform: scale(1.08);
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, .72), 0 0 0 4px rgba(217, 137, 53, .13), 0 0 14px rgba(217, 137, 53, .44);
+      }
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .mobile-actions {
+      display: none;
+    }
+
+    .main {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 18px clamp(12px, 3vw, 28px) 24px;
+      display: grid;
+      grid-template-columns: minmax(320px, 520px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 6px 22px rgba(39, 36, 30, .055);
+    }
+
+    .cabinet-panel {
+      padding: 16px;
+      transition: filter .22s ease, opacity .22s ease;
+    }
+
+    body.modal-open .cabinet-panel {
+      filter: blur(4px);
+      opacity: .82;
+    }
+
+    .cabinet-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 720 / 1080;
+      max-height: calc(100vh - 140px);
+      display: grid;
+      place-items: center;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .cabinet-line {
+      fill: rgba(249, 249, 247, .88);
+      stroke: #8a8987;
+      stroke-width: 1.45;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .cabinet-detail {
+      fill: none;
+      stroke: #999894;
+      stroke-width: 1.05;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .cabinet-soft {
+      fill: rgba(244, 244, 241, .82);
+      stroke: #999894;
+      stroke-width: 1.05;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .hit-area {
+      fill: rgba(141, 134, 123, .04);
+      stroke: rgba(141, 134, 123, .16);
+      stroke-width: 1.45;
+      vector-effect: non-scaling-stroke;
+      cursor: pointer;
+    }
+
+    .hit-area:hover,
+    .hit-area.active {
+      fill: rgba(173, 163, 148, .20);
+      stroke: rgba(111, 103, 93, .72);
+    }
+
+    .hit-area.done {
+      fill: rgba(159, 175, 159, .42);
+      stroke: rgba(137, 158, 141, .82);
+    }
+
+    .drawer-label,
+    .shelf-label {
+      pointer-events: none;
+      font-size: 18px;
+      fill: #111111;
+      font-weight: 700;
+    }
+
+    .work-panel {
+      overflow: hidden;
+    }
+
+    .close-list-btn {
+      display: none;
+    }
+
+    .section-head {
+      padding: 16px 16px 13px;
+      background: #F4F4F2;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .section-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .progress {
+      min-width: 90px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .drug-strip {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 14px 20px 32px;
+      scroll-padding-left: 20px;
+      scroll-snap-type: x proximity;
+      min-height: 150px;
+      background: #E4E4E0;
+    }
+
+    .drug-card {
+      flex: 0 0 min(250px, 78vw);
+      min-height: 116px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .92);
+      scroll-snap-align: start;
+      text-align: left;
+      color: var(--ink);
+      box-shadow: 0 12px 26px rgba(17, 17, 17, .085);
+    }
+
+    .drug-card:hover {
+      background: #faf9f6;
+      border-color: #d3d0ca;
+      box-shadow: 0 14px 30px rgba(17, 17, 17, .11);
+    }
+
+    .drug-card.done {
+      border-color: rgba(137, 158, 141, .84);
+      background: #f2f4f0;
+      box-shadow: 0 14px 30px rgba(137, 158, 141, .24), 0 8px 18px rgba(17, 17, 17, .075);
+    }
+
+    .drug-card strong {
+      display: block;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .drug-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .empty-state {
+      padding: 20px 16px 28px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px 14px 16px;
+      background: #E4E4E0;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .summary-item {
+      padding: 14px 18px;
+      background: #F7F7F5;
+      border-radius: 13px;
+      box-shadow: 0 8px 18px rgba(17, 17, 17, .055);
+    }
+
+    .summary-item b {
+      display: block;
+      font-size: 20px;
+    }
+
+    .summary-item span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .admin-panel {
+      grid-column: 1 / -1;
+      display: none;
+      overflow: hidden;
+    }
+
+    .admin-close-btn {
+      display: none;
+    }
+
+    .admin-panel.show {
+      display: block;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      min-height: 44px;
+      padding: 9px 11px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .qty-control {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 52px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .qty-back {
+      min-height: 44px;
+      padding: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: #F4F4F2;
+      font-size: 17px;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(17, 17, 17, .085);
+    }
+
+    .qty-back:hover {
+      background: #E9E9E7;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      line-height: 1.5;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .admin-actions,
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .bulk-paste {
+      min-height: 116px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      background: #F8F8F6;
+    }
+
+    .field-help {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .drug-table {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .drug-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 9px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .drug-row:last-child { border-bottom: 0; }
+
+    .drug-row span {
+      overflow-wrap: anywhere;
+      min-width: 0;
+    }
+
+    .admin-drug-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(96px, .65fr);
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .admin-drug-fields input {
+      min-height: 38px;
+      border-radius: 12px;
+      background: #F8F8F6;
+    }
+
+    .admin-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .admin-row-actions .button-small {
+      min-width: 34px;
+      padding: 0 9px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #E1E1DD;
+      white-space: nowrap;
+    }
+
+    .status-pill.done {
+      color: #111111;
+      background: #9FAF9F;
+    }
+
+    .status-pill.not-found {
+      color: #F4F4F2;
+      background: #4D4D49;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: transparent;
+      pointer-events: none;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(560px, 100%);
+      max-height: min(760px, calc(100vh - 32px));
+      overflow: auto;
+      background: #EDEDEA;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      pointer-events: auto;
+    }
+
+    .modal-backdrop.show .modal {
+      animation: modalPopIn .22s cubic-bezier(.2, .82, .2, 1) both;
+    }
+
+    @keyframes modalPopIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .sheet-handle {
+      display: none;
+    }
+
+    .modal-header {
+      padding: 16px;
+      background: #F5F5F3;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .modal-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .modal-body {
+      padding: 16px;
+      background: #EDEDEA;
+    }
+
+    .calc {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .calc button {
+      min-height: 46px;
+      color: var(--ink);
+      background: #F4F4F2;
+      border: 1px solid var(--line);
+      font-weight: 700;
+    }
+
+    .calc button:hover { background: #E3E3DF; }
+
+    .calc .op {
+      color: #686866;
+      background: #e5e2dc;
+    }
+
+    .calc .wide {
+      grid-column: span 2;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 14px 16px 16px;
+      background: #F5F5F3;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .not-found-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #302f2d;
+      background: #E1E1DD;
+      border: 1px solid #D1D1CC;
+    }
+
+    .not-found-btn:hover {
+      background: #D8D8D3;
+    }
+
+    .not-found-icon {
+      min-width: 50px;
+      color: #302f2d;
+      flex: 0 0 auto;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      z-index: 30;
+      transform: translateX(-50%) translateY(120%);
+      min-width: min(420px, calc(100vw - 28px));
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      color: #fff;
+      background: rgba(23, 32, 42, .94);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transition: transform .2s ease, opacity .2s ease, visibility .2s ease;
+      text-align: center;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 920px) {
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .cabinet-wrap {
+        max-height: none;
+      }
+
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        min-height: 100dvh;
+        overflow-x: hidden;
+        background: #E9E9E7;
+      }
+
+      .shell {
+        min-height: 100dvh;
+        padding-bottom: 0;
+      }
+
+      .topbar {
+        min-height: 54px;
+        padding: 9px 15px;
+        background: rgba(244, 244, 242, .90);
+        box-shadow: 0 8px 22px rgba(17, 17, 17, .055);
+        backdrop-filter: blur(14px);
+      }
+
+      .brand {
+        min-width: 0;
+      }
+
+      .brand h1 {
+        font-size: 17px;
+        font-weight: 760;
+      }
+
+      .save-monitor {
+        gap: 0;
+        margin-left: auto;
+        width: 28px;
+        height: 24px;
+        padding: 0;
+        background: #DDDDD9;
+        border-radius: 11px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72), 0 7px 16px rgba(17, 17, 17, .07);
+      }
+
+      .top-actions {
+        display: none;
+      }
+
+      .mobile-actions {
+        position: fixed;
+        right: 14px;
+        bottom: calc(14px + env(safe-area-inset-bottom));
+        z-index: 19;
+        display: block;
+      }
+
+      .mobile-actions summary {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        min-height: 56px;
+        padding: 0;
+        color: var(--ink);
+        background: rgba(255, 255, 255, .78);
+        border: 1px solid rgba(255, 255, 255, .88);
+        border-radius: 999px;
+        box-shadow: 0 18px 34px rgba(39, 36, 30, .16), inset 0 0 0 1px rgba(211, 205, 195, .36);
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        backdrop-filter: blur(12px);
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      }
+
+      .mobile-actions summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .mobile-actions[open] summary {
+        transform: rotate(90deg);
+        background: rgba(255, 255, 255, .92);
+      }
+
+      .menu-icon,
+      .menu-icon::before,
+      .menu-icon::after {
+        display: block;
+        width: 20px;
+        height: 2px;
+        border-radius: 999px;
+        background: #5a5752;
+      }
+
+      .menu-icon {
+        position: relative;
+      }
+
+      .menu-icon::before,
+      .menu-icon::after {
+        content: "";
+        position: absolute;
+        left: 0;
+      }
+
+      .menu-icon::before {
+        top: -7px;
+      }
+
+      .menu-icon::after {
+        top: 7px;
+      }
+
+      .mobile-actions-panel {
+        position: absolute;
+        right: 0;
+        bottom: 64px;
+        width: 158px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 8px;
+        background: rgba(244, 244, 242, .94);
+        border: 1px solid rgba(220, 220, 216, .82);
+        border-radius: 18px;
+        box-shadow: 0 18px 36px rgba(17, 17, 17, .14);
+        backdrop-filter: blur(14px);
+        animation: menuRollOut .22s cubic-bezier(.2, .8, .2, 1);
+        transform-origin: bottom right;
+      }
+
+      .mobile-actions-panel button {
+        min-height: 44px;
+        border-radius: 999px;
+        color: #fff;
+        background: #111111;
+        border: 1px solid #111111;
+        box-shadow: 0 10px 20px rgba(17, 17, 17, .12);
+        opacity: 0;
+        animation: menuItemIn .26s cubic-bezier(.2, .8, .2, 1) forwards;
+      }
+
+      .mobile-actions-panel .button-secondary {
+        color: var(--ink);
+        background: #F8F8F6;
+        border-color: #D5D5D1;
+      }
+
+      .mobile-actions-panel button:nth-child(2) {
+        animation-delay: .045s;
+      }
+
+      .main {
+        width: 100%;
+        min-height: calc(100dvh - 54px);
+        padding: 5px 6px 0;
+        display: block;
+      }
+
+      .cabinet-panel {
+        height: calc(100dvh - 60px);
+        padding: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(250, 250, 248, .78);
+        border: 1px solid rgba(222, 222, 218, .78);
+        border-radius: 22px;
+        box-shadow: 0 20px 44px rgba(17, 17, 17, .10);
+        backdrop-filter: blur(12px);
+        overflow: hidden;
+      }
+
+      .cabinet-wrap {
+        width: min(100%, 76dvh);
+        height: 100%;
+        max-height: 100%;
+        aspect-ratio: auto;
+      }
+
+      .work-panel {
+        position: fixed;
+        top: 64px;
+        left: 12px;
+        right: 12px;
+        z-index: 16;
+        display: block;
+        max-height: 224px;
+        border: 1px solid rgba(255, 255, 255, .78);
+        border-radius: 20px;
+        background: rgba(232, 232, 228, .96);
+        box-shadow: 0 18px 42px rgba(17, 17, 17, .15);
+        backdrop-filter: blur(14px);
+        transform: translateY(calc(-100% - 72px));
+        opacity: 0;
+        pointer-events: none;
+        transition: transform .22s ease, opacity .22s ease;
+        isolation: isolate;
+      }
+
+      .work-panel.has-location {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .work-panel.has-location::before {
+        content: "";
+        position: fixed;
+        inset: -70px -8px -100dvh;
+        z-index: -1;
+        background: rgba(229, 227, 223, .38);
+        backdrop-filter: blur(4px);
+      }
+
+      .section-head {
+        align-items: center;
+        flex-direction: row;
+        padding: 12px 14px 9px;
+        gap: 10px;
+      }
+
+      .section-head h2 {
+        max-width: calc(100vw - 150px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 16px;
+        font-weight: 760;
+      }
+
+      .section-head p {
+        display: none;
+      }
+
+      .progress {
+        min-width: auto;
+        text-align: right;
+        color: rgba(77, 77, 75, .48);
+        font-size: 12px;
+      }
+
+      .close-list-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        min-width: 36px;
+        min-height: 36px;
+        padding: 0;
+        color: #F4F4F2;
+        background: #4D4D49;
+        border: 1px solid rgba(77, 77, 73, .92);
+        border-radius: 999px;
+        box-shadow: 0 8px 18px rgba(17, 17, 17, .18), inset 0 1px 0 rgba(255, 255, 255, .18);
+        font-size: 21px;
+        font-weight: 840;
+        line-height: 1;
+      }
+
+      .close-list-btn:active {
+        color: #F4F4F2;
+        background: #333330;
+        border-color: #333330;
+        box-shadow: 0 5px 12px rgba(17, 17, 17, .16), inset 0 1px 0 rgba(255, 255, 255, .14);
+        transform: translateY(1px);
+      }
+
+      .drug-strip {
+        min-height: 132px;
+        padding: 8px 22px 52px;
+        scroll-padding-left: 22px;
+        gap: 10px;
+        background: #E4E4E0;
+      }
+
+      .drug-card {
+        flex-basis: min(232px, 76vw);
+        min-height: 104px;
+        padding: 13px;
+        color: #302f2d;
+        border-color: #e0e0dc;
+        border-radius: 18px;
+        background: #EFEFED;
+        box-shadow: 0 16px 34px rgba(17, 17, 17, .13);
+        backdrop-filter: none;
+      }
+
+      .drug-card:hover {
+        background: #F7F7F5;
+        border-color: #d0d0cb;
+        box-shadow: 0 18px 38px rgba(17, 17, 17, .16);
+      }
+
+      .drug-card.done {
+        border-color: rgba(137, 158, 141, .84);
+        background: #9FAF9F;
+        color: #F4F4F2;
+        box-shadow: 0 18px 36px rgba(137, 158, 141, .36), 0 12px 26px rgba(17, 17, 17, .12);
+      }
+
+      .drug-card.done .drug-meta {
+        color: rgba(244, 244, 242, .78);
+      }
+
+      .drug-card.done .status-pill {
+        color: #F4F4F2;
+        background: rgba(17, 17, 17, .18);
+      }
+
+      .drug-card.done .status-pill.not-found {
+        color: #F4F4F2;
+        background: rgba(17, 17, 17, .28);
+      }
+
+      .drug-card strong {
+        font-size: 14px;
+      }
+
+      .drug-meta {
+        color: rgba(49, 43, 36, .58);
+        font-size: 12px;
+      }
+
+      .status-pill {
+        color: rgba(49, 43, 36, .58);
+        min-height: 22px;
+        padding: 1px 8px;
+        background: rgba(234, 232, 228, .84);
+        font-size: 11px;
+      }
+
+      .status-pill.done {
+        color: #111111;
+        background: rgba(159, 175, 159, .94);
+      }
+
+      .status-pill.not-found {
+        color: #F4F4F2;
+        background: #4D4D49;
+      }
+
+      .summary {
+        display: none;
+      }
+
+      .admin-panel.show {
+        position: fixed;
+        inset: 10px;
+        z-index: 25;
+        display: block;
+        overflow: auto;
+        border-radius: 26px;
+        background: rgba(244, 243, 240, .92);
+        box-shadow: 0 24px 60px rgba(39, 36, 30, .18);
+        backdrop-filter: blur(18px);
+      }
+
+      .admin-close-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        min-width: 38px;
+        min-height: 38px;
+        padding: 0;
+        color: #111111;
+        background: #F28C28;
+        border: 1px solid rgba(242, 140, 40, .92);
+        border-radius: 999px;
+        box-shadow: 0 8px 18px rgba(242, 140, 40, .22), inset 0 1px 0 rgba(255, 255, 255, .34);
+        font-size: 21px;
+        font-weight: 840;
+        line-height: 1;
+      }
+
+      .admin-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+
+      .modal-backdrop {
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0;
+        background: transparent;
+        backdrop-filter: none;
+      }
+
+      .modal {
+        width: 100%;
+        max-height: 82dvh;
+        border-radius: 26px 26px 0 0;
+        border: 1px solid rgba(222, 222, 218, .86);
+        border-bottom: 0;
+        background: rgba(244, 244, 242, .97);
+        box-shadow: 0 -20px 48px rgba(17, 17, 17, .16);
+        backdrop-filter: blur(14px);
+      }
+
+      .modal-backdrop.show .modal {
+        animation: sheetSlideUp .24s cubic-bezier(.2, .86, .2, 1) both;
+      }
+
+      @keyframes sheetSlideUp {
+        from {
+          opacity: .72;
+          transform: translateY(32px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .sheet-handle {
+        display: block;
+        width: 44px;
+        height: 4px;
+        margin: 9px auto 0;
+        border-radius: 999px;
+        background: #d4cbbf;
+      }
+
+      .modal-header {
+        padding: 11px 18px 9px;
+        align-items: flex-start;
+      }
+
+      .modal-header h3 {
+        font-size: 17px;
+      }
+
+      .modal-header p {
+        font-size: 12px;
+      }
+
+      .modal-body {
+        padding: 12px 18px 14px;
+      }
+
+      .field {
+        margin-bottom: 10px;
+        gap: 6px;
+      }
+
+      input,
+      textarea,
+      select {
+        min-height: 44px;
+        border-color: #D0D0CC;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: inset 0 1px 2px rgba(17, 17, 17, .035);
+      }
+
+      .calc {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 9px;
+        padding: 10px;
+        background: #E6E6E2;
+        border: 1px solid #D5D5D1;
+        border-radius: 20px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .68);
+      }
+
+      .calc button {
+        min-height: 50px;
+        padding: 0;
+        border-color: #D9D9D6;
+        border-radius: 17px;
+        color: #111111;
+        background: #F8F8F6;
+        box-shadow: 0 5px 12px rgba(17, 17, 17, .075);
+        font-size: 18px;
+        font-weight: 680;
+      }
+
+      .calc button:hover {
+        background: #fff;
+      }
+
+      .calc .op {
+        color: #111111;
+        background: #A8B9CC;
+        border-color: #A8B9CC;
+        box-shadow: 0 7px 16px rgba(168, 185, 204, .24);
+      }
+
+      .calc button[data-key="clear"] {
+        color: #111111;
+        background: #D9D9D6;
+        border-color: #D0D0CC;
+      }
+
+      .qty-back {
+        min-height: 48px;
+        border-radius: 16px;
+        background: #D9D9D6;
+        border-color: #D0D0CC;
+        box-shadow: 0 8px 18px rgba(17, 17, 17, .11);
+      }
+
+      .calc button[data-key="="] {
+        color: #fff;
+        background: #111111;
+        border-color: #111111;
+      }
+
+      .modal-footer {
+        position: sticky;
+        bottom: 0;
+        padding: 11px 18px calc(11px + env(safe-area-inset-bottom));
+        background: #F5F5F3;
+      }
+
+      .modal-footer button {
+        border-radius: 999px;
+      }
+
+      .not-found-btn {
+        min-height: 44px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+
+      .modal-footer .button-secondary {
+        background: rgba(255, 255, 255, .70);
+        border-color: rgba(255, 255, 255, .90);
+      }
+
+      @keyframes menuRollOut {
+        from {
+          opacity: 0;
+          transform: translateY(12px) scale(.94) rotate(-3deg);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1) rotate(0deg);
+        }
+      }
+
+      @keyframes menuItemIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .drug-row {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-drug-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-row-actions {
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script id="cabinet-config" type="application/json">
+{
+  "cabinetId": "oral-1",
+  "cabinetName": "口服藥 1",
+  "locations": [
+    {
+      "id": "shelf-1",
+      "name": "層架 1",
+      "items": [
+        { "drugName": "Acetaminophen 500mg Tab", "slotNo": "S1-01" },
+        { "drugName": "Amoxicillin 250mg Cap", "slotNo": "S1-02" },
+        { "drugName": "Metformin 500mg Tab", "slotNo": "S1-03" }
+      ]
+    },
+    {
+      "id": "shelf-2",
+      "name": "層架 2",
+      "items": [
+        { "drugName": "Amlodipine 5mg Tab", "slotNo": "S2-01" },
+        { "drugName": "Atorvastatin 20mg Tab", "slotNo": "S2-02" }
+      ]
+    },
+    {
+      "id": "shelf-3",
+      "name": "層架 3",
+      "items": [
+        { "drugName": "Omeprazole 20mg Cap", "slotNo": "S3-01" },
+        { "drugName": "Cetirizine 10mg Tab", "slotNo": "S3-02" }
+      ]
+    },
+    {
+      "id": "shelf-4",
+      "name": "層架 4",
+      "items": [
+        { "drugName": "Prednisolone 5mg Tab", "slotNo": "S4-01" }
+      ]
+    },
+    {
+      "id": "drawer-left-1",
+      "name": "左側抽屜 1",
+      "items": [
+        { "drugName": "Warfarin 5mg Tab", "slotNo": "L1-01" },
+        { "drugName": "Digoxin 0.25mg Tab", "slotNo": "L1-02" }
+      ]
+    },
+    {
+      "id": "drawer-left-2",
+      "name": "左側抽屜 2",
+      "items": [
+        { "drugName": "Spironolactone 25mg Tab", "slotNo": "L2-01" }
+      ]
+    },
+    {
+      "id": "drawer-left-3",
+      "name": "左側抽屜 3",
+      "items": []
+    },
+    {
+      "id": "drawer-left-4",
+      "name": "左側抽屜 4",
+      "items": []
+    },
+    {
+      "id": "drawer-right-1",
+      "name": "右側抽屜 1",
+      "items": [
+        { "drugName": "Clopidogrel 75mg Tab", "slotNo": "R1-01" }
+      ]
+    },
+    {
+      "id": "drawer-right-2",
+      "name": "右側抽屜 2",
+      "items": []
+    },
+    {
+      "id": "drawer-right-3",
+      "name": "右側抽屜 3",
+      "items": []
+    },
+    {
+      "id": "drawer-right-4",
+      "name": "右側抽屜 4",
+      "items": []
+    }
+  ]
+}
+  </script>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1 id="cabinetTitle">智慧藥櫃盤點</h1>
+        <span id="saveStatus">離線模式，資料會儲存在這台裝置</span>
+      </div>
+      <div id="saveMonitor" class="save-monitor" aria-live="polite" aria-label="儲存狀態">
+        <span class="save-lamp" aria-hidden="true"></span>
+      </div>
+      <div class="top-actions">
+        <button id="exportCsvBtn" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
+        <button id="adminToggleBtn" class="button-secondary" title="切換後台設定">後台設定</button>
+      </div>
+    </header>
+
+    <details class="mobile-actions">
+      <summary aria-label="開啟功能選單"><span class="menu-icon" aria-hidden="true"></span></summary>
+      <div class="mobile-actions-panel">
+        <button id="mobileExportCsvBtn" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
+        <button id="mobileAdminToggleBtn" class="button-secondary" title="切換後台設定">後台設定</button>
+      </div>
+    </details>
+
+    <main class="main">
+      <section class="panel cabinet-panel" aria-label="藥櫃示意圖">
+        <div class="cabinet-wrap">
+          <svg id="cabinetSvg" viewBox="96 42 528 922" role="img" aria-labelledby="cabinetSvgTitle">
+            <title id="cabinetSvgTitle">可點選的智慧藥櫃示意圖</title>
+
+            <rect x="124" y="880" width="472" height="68" class="cabinet-soft"></rect>
+            <circle cx="178" cy="914" r="5" class="cabinet-line"></circle>
+            <circle cx="542" cy="914" r="5" class="cabinet-line"></circle>
+
+            <rect x="120" y="498" width="480" height="392" class="cabinet-line"></rect>
+            <line x1="360" y1="498" x2="360" y2="890" class="cabinet-detail"></line>
+            <rect x="112" y="482" width="496" height="22" class="cabinet-soft"></rect>
+
+            <g id="drawerDetails"></g>
+
+            <path d="M 136 482 V 52 H 152 V 482 Z" class="cabinet-soft"></path>
+            <path d="M 584 482 V 52 H 568 V 482 Z" class="cabinet-soft"></path>
+            <line x1="140" y1="482" x2="140" y2="70" class="cabinet-detail"></line>
+            <line x1="580" y1="482" x2="580" y2="70" class="cabinet-detail"></line>
+            <rect x="138" y="52" width="444" height="18" class="cabinet-soft"></rect>
+            <line x1="148" y1="70" x2="572" y2="70" class="cabinet-detail"></line>
+
+            <g id="shelfDetails"></g>
+            <g id="hitAreas"></g>
+          </svg>
+        </div>
+      </section>
+
+      <section id="workPanel" class="panel work-panel">
+        <div class="section-head">
+          <div>
+            <h2 id="locationTitle">請點選層架或抽屜</h2>
+            <p id="locationHint">選擇位置後，這裡會顯示該位置的藥品清單。</p>
+          </div>
+          <div class="progress" id="locationProgress">0 / 0</div>
+          <button id="closeDrugListBtn" class="close-list-btn" aria-label="關閉藥品清單" title="關閉">×</button>
+        </div>
+        <div id="drugStrip" class="drug-strip" aria-live="polite"></div>
+        <div class="summary">
+          <div class="summary-item">
+            <b id="totalDrugCount">0</b>
+            <span>藥品項目</span>
+          </div>
+          <div class="summary-item">
+            <b id="doneDrugCount">0</b>
+            <span>已輸入</span>
+          </div>
+          <div class="summary-item">
+            <b id="missingDrugCount">0</b>
+            <span>未完成</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="adminPanel" class="panel admin-panel" aria-label="後台設定">
+        <div class="section-head">
+          <div>
+            <h2>後台設定</h2>
+            <p>設定好藥櫃名稱與位置後，可匯出設定或下載一份已內建此設定的離線盤點檔。</p>
+          </div>
+          <button id="adminCloseBtn" class="admin-close-btn" aria-label="關閉後台設定" title="關閉">×</button>
+          <button id="downloadHtmlBtn" class="button-secondary">下載此藥櫃離線檔</button>
+        </div>
+        <div class="admin-grid">
+          <div>
+            <div class="field">
+              <label for="cabinetNameInput">藥櫃名稱</label>
+              <input id="cabinetNameInput" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="cabinetIdInput">藥櫃代碼</label>
+              <input id="cabinetIdInput" autocomplete="off" placeholder="例如 oral-1">
+            </div>
+            <div class="field">
+              <label for="locationSelect">編輯位置</label>
+              <select id="locationSelect"></select>
+            </div>
+            <div class="field">
+              <label for="drugNameInput">藥品名稱</label>
+              <input id="drugNameInput" autocomplete="off" placeholder="例如 Acetaminophen 500mg Tab">
+            </div>
+            <div class="field">
+              <label for="slotNoInput">料位號</label>
+              <input id="slotNoInput" autocomplete="off" placeholder="例如 S1-01">
+            </div>
+            <div class="admin-actions">
+              <button id="addDrugBtn">加入藥品</button>
+              <button id="clearLocationBtn" class="button-secondary">清空此位置</button>
+            </div>
+            <div class="field">
+              <label for="bulkPasteInput">從 Excel 批次貼上</label>
+              <textarea id="bulkPasteInput" class="bulk-paste" spellcheck="false" placeholder="可直接貼上 Excel 儲存格&#10;藥品名稱    料位號&#10;Acetaminophen 500mg Tab    S1-01&#10;Amoxicillin 250mg Cap    S1-02"></textarea>
+              <div class="field-help">支援「藥品名稱 + 料位號」兩欄；若含「位置」欄，會依位置名稱或代碼自動分配到對應層架/抽屜。</div>
+            </div>
+            <div class="admin-actions">
+              <button id="bulkAppendBtn" class="button-secondary">批次加入</button>
+              <button id="bulkReplaceBtn" class="button-secondary">覆蓋匯入</button>
+              <button id="bulkClearBtn" class="button-secondary">清除貼上內容</button>
+            </div>
+          </div>
+          <div>
+            <div class="field">
+              <label>目前位置藥品</label>
+              <div id="adminDrugList" class="drug-table"></div>
+            </div>
+            <div class="field">
+              <label for="configText">位置設定 JSON</label>
+              <textarea id="configText" spellcheck="false"></textarea>
+            </div>
+            <div class="admin-actions">
+              <button id="exportConfigBtn" class="button-secondary">下載設定 JSON</button>
+              <button id="importConfigBtn" class="button-secondary">匯入設定 JSON</button>
+              <button id="applyConfigBtn" class="button-secondary">套用文字設定</button>
+              <button id="resetDemoBtn" class="button-danger">還原範例設定</button>
+              <input id="importConfigInput" class="sr-only" type="file" accept=".json,application/json">
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="drugModal" class="modal-backdrop" role="dialog" aria-modal="false" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="modal-header">
+        <div>
+          <h3 id="modalTitle"></h3>
+          <p id="modalMeta"></p>
+        </div>
+        <button id="closeModalBtn" class="icon-action-btn" aria-label="關閉盤點輸入視窗" title="關閉">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="qtyInput">數量</label>
+          <div class="qty-control">
+            <input id="qtyInput" inputmode="none" autocomplete="off" readonly placeholder="使用下方按鍵輸入或加總">
+            <button id="qtyBackBtn" class="qty-back" type="button" aria-label="刪除最後一個字">⌫</button>
+          </div>
+          <div class="calc" aria-label="數量加總計算機">
+            <button data-key="7">7</button>
+            <button data-key="8">8</button>
+            <button data-key="9">9</button>
+            <button data-key="*" class="op">×</button>
+            <button data-key="4">4</button>
+            <button data-key="5">5</button>
+            <button data-key="6">6</button>
+            <button data-key="-" class="op">-</button>
+            <button data-key="1">1</button>
+            <button data-key="2">2</button>
+            <button data-key="3">3</button>
+            <button data-key="+" class="op">+</button>
+            <button data-key="0">0</button>
+            <button data-key=".">.</button>
+            <button data-key="clear" class="op">C</button>
+            <button data-key="=" class="op">=</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="expiryInput">效期</label>
+          <input id="expiryInput" type="date">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="deleteEntryBtn" class="button-secondary">清除本筆</button>
+        <button id="notFoundBtn" class="not-found-btn" type="button">
+          <span class="not-found-icon" aria-hidden="true">¯\_(ツ)_/¯</span>
+          找不到庫存
+        </button>
+        <button id="saveEntryBtn">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const defaultConfig = JSON.parse(document.getElementById('cabinet-config').textContent);
+    const storagePrefix = 'offline-med-cabinet-v1:';
+    const fixedLocations = [
+      { id: 'shelf-1', name: '層架 1' },
+      { id: 'shelf-2', name: '層架 2' },
+      { id: 'shelf-3', name: '層架 3' },
+      { id: 'shelf-4', name: '層架 4' },
+      { id: 'drawer-left-1', name: '左側抽屜 1' },
+      { id: 'drawer-left-2', name: '左側抽屜 2' },
+      { id: 'drawer-left-3', name: '左側抽屜 3' },
+      { id: 'drawer-left-4', name: '左側抽屜 4' },
+      { id: 'drawer-right-1', name: '右側抽屜 1' },
+      { id: 'drawer-right-2', name: '右側抽屜 2' },
+      { id: 'drawer-right-3', name: '右側抽屜 3' },
+      { id: 'drawer-right-4', name: '右側抽屜 4' }
+    ];
+    let config = normalizeConfig(clone(defaultConfig));
+    let currentLocationId = '';
+    let activeDrugIndex = -1;
+    let activeLocationId = '';
+    let entries = {};
+
+    const $ = (selector) => document.querySelector(selector);
+    const dom = {
+      title: $('#cabinetTitle'),
+      saveStatus: $('#saveStatus'),
+      saveMonitor: $('#saveMonitor'),
+      cabinetSvg: $('#cabinetSvg'),
+      drawerDetails: $('#drawerDetails'),
+      shelfDetails: $('#shelfDetails'),
+      hitAreas: $('#hitAreas'),
+      drugStrip: $('#drugStrip'),
+      locationTitle: $('#locationTitle'),
+      locationHint: $('#locationHint'),
+      locationProgress: $('#locationProgress'),
+      totalDrugCount: $('#totalDrugCount'),
+      doneDrugCount: $('#doneDrugCount'),
+      missingDrugCount: $('#missingDrugCount'),
+      workPanel: $('#workPanel'),
+      closeDrugListBtn: $('#closeDrugListBtn'),
+      exportCsvBtn: $('#exportCsvBtn'),
+      mobileExportCsvBtn: $('#mobileExportCsvBtn'),
+      adminToggleBtn: $('#adminToggleBtn'),
+      mobileAdminToggleBtn: $('#mobileAdminToggleBtn'),
+      adminPanel: $('#adminPanel'),
+      adminCloseBtn: $('#adminCloseBtn'),
+      cabinetNameInput: $('#cabinetNameInput'),
+      cabinetIdInput: $('#cabinetIdInput'),
+      locationSelect: $('#locationSelect'),
+      drugNameInput: $('#drugNameInput'),
+      slotNoInput: $('#slotNoInput'),
+      addDrugBtn: $('#addDrugBtn'),
+      clearLocationBtn: $('#clearLocationBtn'),
+      bulkPasteInput: $('#bulkPasteInput'),
+      bulkAppendBtn: $('#bulkAppendBtn'),
+      bulkReplaceBtn: $('#bulkReplaceBtn'),
+      bulkClearBtn: $('#bulkClearBtn'),
+      adminDrugList: $('#adminDrugList'),
+      configText: $('#configText'),
+      exportConfigBtn: $('#exportConfigBtn'),
+      importConfigBtn: $('#importConfigBtn'),
+      importConfigInput: $('#importConfigInput'),
+      applyConfigBtn: $('#applyConfigBtn'),
+      resetDemoBtn: $('#resetDemoBtn'),
+      downloadHtmlBtn: $('#downloadHtmlBtn'),
+      modal: $('#drugModal'),
+      modalTitle: $('#modalTitle'),
+      modalMeta: $('#modalMeta'),
+      closeModalBtn: $('#closeModalBtn'),
+      qtyInput: $('#qtyInput'),
+      qtyBackBtn: $('#qtyBackBtn'),
+      expiryInput: $('#expiryInput'),
+      notFoundBtn: $('#notFoundBtn'),
+      saveEntryBtn: $('#saveEntryBtn'),
+      deleteEntryBtn: $('#deleteEntryBtn'),
+      toast: $('#toast')
+    };
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function legacyGet(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    }
+
+    function legacySet(key, value) {
+      try {
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+      } catch {
+        // IndexedDB remains the primary store; localStorage is only a compatibility mirror.
+      }
+    }
+
+    function legacyRemove(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // Ignore localStorage cleanup failures.
+      }
+    }
+
+    function openInventoryDb() {
+      if (!('indexedDB' in window)) return Promise.reject(new Error('IndexedDB unavailable'));
+      if (openInventoryDb.promise) return openInventoryDb.promise;
+      openInventoryDb.promise = new Promise((resolve, reject) => {
+        const request = indexedDB.open('offline-medicine-cabinet-inventory', 1);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains('records')) {
+            db.createObjectStore('records', { keyPath: 'key' });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('IndexedDB open failed'));
+      });
+      return openInventoryDb.promise;
+    }
+
+    async function dbGet(key) {
+      const db = await openInventoryDb();
+      return new Promise((resolve, reject) => {
+        const request = db.transaction('records', 'readonly').objectStore('records').get(key);
+        request.onsuccess = () => resolve(request.result ? request.result.value : null);
+        request.onerror = () => reject(request.error || new Error('IndexedDB read failed'));
+      });
+    }
+
+    async function dbSet(key, value) {
+      const db = await openInventoryDb();
+      return new Promise((resolve, reject) => {
+        const request = db.transaction('records', 'readwrite').objectStore('records').put({
+          key,
+          value: clone(value)
+        });
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error || new Error('IndexedDB write failed'));
+      });
+    }
+
+    async function dbRemove(key) {
+      const db = await openInventoryDb();
+      return new Promise((resolve, reject) => {
+        const request = db.transaction('records', 'readwrite').objectStore('records').delete(key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error || new Error('IndexedDB delete failed'));
+      });
+    }
+
+    function persistRecord(key, value) {
+      legacySet(key, value);
+      dbSet(key, value).catch(() => {
+        showToast('此瀏覽器無法使用 IndexedDB，已改用備援暫存');
+      });
+    }
+
+    function removeRecord(key) {
+      legacyRemove(key);
+      dbRemove(key).catch(() => {});
+    }
+
+    function parseLegacyJson(value, fallback) {
+      if (!value) return fallback;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return fallback;
+      }
+    }
+
+    async function loadConfig() {
+      const embedded = clone(defaultConfig);
+      const legacyCabinetId = legacyGet(storagePrefix + 'lastCabinetId');
+      const dbCabinetId = await dbGet(storagePrefix + 'lastCabinetId').catch(() => null);
+      const lastCabinetId = dbCabinetId || legacyCabinetId || embedded.cabinetId;
+      const dbConfig = await dbGet(storagePrefix + 'config:' + lastCabinetId).catch(() => null);
+      const legacyConfig = parseLegacyJson(legacyGet(storagePrefix + 'config:' + lastCabinetId), null);
+      const saved = dbConfig || legacyConfig;
+      if (!saved) return embedded;
+      try {
+        const normalized = normalizeConfig(saved);
+        if (!dbConfig && legacyConfig) {
+          persistRecord(storagePrefix + 'config:' + normalized.cabinetId, normalized);
+          persistRecord(storagePrefix + 'lastCabinetId', normalized.cabinetId);
+        }
+        return normalized;
+      } catch {
+        return embedded;
+      }
+    }
+
+    function normalizeConfig(nextConfig) {
+      const allowedIds = new Set(fixedLocations.map((location) => location.id));
+      const byId = new Map((Array.isArray(nextConfig.locations) ? nextConfig.locations : [])
+        .filter((location) => allowedIds.has(String(location.id)))
+        .map((location) => [String(location.id), location]));
+      const normalized = {
+        cabinetId: String(nextConfig.cabinetId || 'cabinet-' + Date.now()),
+        cabinetName: String(nextConfig.cabinetName || '未命名藥櫃'),
+        locations: fixedLocations.map((definition) => byId.get(definition.id) || definition)
+      };
+      normalized.locations = normalized.locations.map((location, index) => ({
+        id: String(location.id || 'location-' + (index + 1)),
+        name: String(location.name || '位置 ' + (index + 1)),
+        items: Array.isArray(location.items)
+          ? location.items.map((item) => ({
+              drugName: String(item.drugName || '').trim(),
+              slotNo: String(item.slotNo || '').trim()
+            })).filter((item) => item.drugName)
+          : []
+      }));
+      return normalized;
+    }
+
+    function saveConfig() {
+      persistRecord(storagePrefix + 'config:' + config.cabinetId, config);
+      persistRecord(storagePrefix + 'lastCabinetId', config.cabinetId);
+      updateSaveStatus('位置設定已暫存');
+    }
+
+    async function loadEntries(cabinetId) {
+      const key = storagePrefix + 'entries:' + cabinetId;
+      const dbEntries = await dbGet(key).catch(() => null);
+      const legacyEntries = parseLegacyJson(legacyGet(key), null);
+      const saved = dbEntries || legacyEntries;
+      if (!saved) return {};
+      try {
+        if (!dbEntries && legacyEntries) persistRecord(key, legacyEntries);
+        return saved || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveEntries(options = {}) {
+      persistRecord(storagePrefix + 'entries:' + config.cabinetId, entries);
+      if (!options.quiet) updateSaveStatus('盤點資料已暫存');
+    }
+
+    function updateSaveStatus(text) {
+      dom.saveStatus.textContent = text + '，可離線使用';
+      flashSaveMonitor();
+      window.clearTimeout(updateSaveStatus.timer);
+      updateSaveStatus.timer = window.setTimeout(() => {
+        dom.saveStatus.textContent = '離線模式，資料會儲存在這台裝置';
+      }, 2600);
+    }
+
+    function flashSaveMonitor() {
+      dom.saveMonitor.classList.remove('is-saving');
+      void dom.saveMonitor.offsetWidth;
+      dom.saveMonitor.classList.add('is-saving');
+      window.clearTimeout(flashSaveMonitor.timer);
+      flashSaveMonitor.timer = window.setTimeout(() => {
+        dom.saveMonitor.classList.remove('is-saving');
+      }, 2800);
+    }
+
+    function getLocation(locationId) {
+      return config.locations.find((location) => location.id === locationId);
+    }
+
+    function entryKey(locationId, drugIndex) {
+      return locationId + '::' + drugIndex;
+    }
+
+    function isEntryDone(locationId, drugIndex) {
+      const entry = entries[entryKey(locationId, drugIndex)];
+      return Boolean(entry && (entry.notFound || (String(entry.quantity).trim() && String(entry.expiryDate).trim())));
+    }
+
+    function isLocationDone(location) {
+      return location.items.length > 0 && location.items.every((_, index) => isEntryDone(location.id, index));
+    }
+
+    function renderCabinetArt() {
+      dom.drawerDetails.innerHTML = '';
+      dom.shelfDetails.innerHTML = '';
+      dom.hitAreas.innerHTML = '';
+
+      const shelfY = [150, 248, 346, 444];
+      shelfY.forEach((y, index) => {
+        const num = index + 1;
+        const hitY = y - 76;
+        dom.shelfDetails.insertAdjacentHTML('beforeend', `
+          <g>
+            <rect x="138" y="${y}" width="444" height="18" class="cabinet-soft"></rect>
+            <line x1="148" y1="${y + 18}" x2="572" y2="${y + 18}" class="cabinet-detail"></line>
+            ${smallShelfSlots(y + 6)}
+          </g>
+        `);
+        addHitArea({
+          id: `shelf-${num}`,
+          label: `層架 ${num}`,
+          x: 150,
+          y: hitY,
+          width: 420,
+          height: 68,
+          textX: 160,
+          textY: hitY + 30,
+          className: 'shelf-label'
+        });
+      });
+
+      const drawerRows = [
+        { id: 'drawer-left-1', x: 132, y: 516, height: 74, label: '左抽 1' },
+        { id: 'drawer-left-2', x: 132, y: 604, height: 74, label: '左抽 2' },
+        { id: 'drawer-left-3', x: 132, y: 692, height: 74, label: '左抽 3' },
+        { id: 'drawer-left-4', x: 132, y: 780, height: 96, label: '左抽 4' },
+        { id: 'drawer-right-1', x: 372, y: 516, height: 74, label: '右抽 1' },
+        { id: 'drawer-right-2', x: 372, y: 604, height: 74, label: '右抽 2' },
+        { id: 'drawer-right-3', x: 372, y: 692, height: 74, label: '右抽 3' },
+        { id: 'drawer-right-4', x: 372, y: 780, height: 96, label: '右抽 4' }
+      ];
+
+      drawerRows.forEach((drawer) => {
+        dom.drawerDetails.insertAdjacentHTML('beforeend', `
+          <g>
+            <rect x="${drawer.x}" y="${drawer.y}" width="216" height="${drawer.height}" class="cabinet-soft"></rect>
+            <line x1="${drawer.x}" y1="${drawer.y + 10}" x2="${drawer.x + 216}" y2="${drawer.y + 10}" class="cabinet-detail"></line>
+            <path d="M ${drawer.x + 58} ${drawer.y + 20} h 108 v 22 q 0 7 -7 7 h -94 q -7 0 -7 -7 z" class="cabinet-detail"></path>
+            <circle cx="${drawer.x + 24}" cy="${drawer.y + 38}" r="7" class="cabinet-detail"></circle>
+            <circle cx="${drawer.x + 24}" cy="${drawer.y + 38}" r="3" class="cabinet-detail"></circle>
+            <rect x="${drawer.x + 178}" y="${drawer.y + 46}" width="14" height="10" class="cabinet-detail"></rect>
+            <rect x="${drawer.x + 198}" y="${drawer.y + 42}" width="8" height="18" class="cabinet-detail"></rect>
+          </g>
+        `);
+        addHitArea({
+          id: drawer.id,
+          label: drawer.label,
+          x: drawer.x + 4,
+          y: drawer.y + 4,
+          width: 208,
+          height: drawer.height - 8,
+          textX: drawer.x + 12,
+          textY: drawer.y + 28,
+          className: 'drawer-label'
+        });
+      });
+    }
+
+    function smallShelfSlots(y) {
+      let html = '';
+      for (let i = 0; i < 13; i++) {
+        const x = 154 + i * 32;
+        html += `<rect x="${x}" y="${y}" width="14" height="7" class="cabinet-detail"></rect>`;
+        html += `<rect x="${x + 20}" y="${y + 1}" width="3" height="6" class="cabinet-detail"></rect>`;
+      }
+      return html;
+    }
+
+    function addHitArea(area) {
+      const done = isLocationDone(getLocation(area.id) || { items: [] });
+      const active = currentLocationId === area.id;
+      dom.hitAreas.insertAdjacentHTML('beforeend', `
+        <g>
+          <rect
+            class="hit-area ${done ? 'done' : ''} ${active ? 'active' : ''}"
+            data-location-id="${area.id}"
+            x="${area.x}"
+            y="${area.y}"
+            width="${area.width}"
+            height="${area.height}"
+            rx="5"
+          ></rect>
+          <text class="${area.className}" x="${area.textX}" y="${area.textY}">${area.label}</text>
+        </g>
+      `);
+    }
+
+    function renderLocationList() {
+      dom.locationSelect.innerHTML = config.locations
+        .map((location) => `<option value="${escapeAttr(location.id)}">${escapeHtml(location.name)}</option>`)
+        .join('');
+      if (currentLocationId) {
+        dom.locationSelect.value = currentLocationId;
+      } else if (config.locations[0]) {
+        dom.locationSelect.value = config.locations[0].id;
+      }
+    }
+
+    function renderDrugStrip() {
+      const location = getLocation(currentLocationId);
+      if (!location) {
+        dom.workPanel.classList.remove('has-location');
+        dom.locationTitle.textContent = '請點選層架或抽屜';
+        dom.locationHint.textContent = '選擇位置後，這裡會顯示該位置的藥品清單。';
+        dom.locationProgress.textContent = '0 / 0';
+        dom.drugStrip.innerHTML = '<div class="empty-state">目前沒有選取位置。</div>';
+        renderSummary();
+        renderCabinetArt();
+        return;
+      }
+
+      dom.workPanel.classList.add('has-location');
+      const doneCount = location.items.filter((_, index) => isEntryDone(location.id, index)).length;
+      dom.locationTitle.textContent = location.name;
+      dom.locationHint.textContent = location.items.length
+        ? '左右滑動藥品卡片，點選後輸入數量與效期。'
+        : '此位置尚未設定藥品，可到後台加入。';
+      dom.locationProgress.textContent = doneCount + ' / ' + location.items.length;
+
+      if (!location.items.length) {
+        dom.drugStrip.innerHTML = '<div class="empty-state">此位置沒有藥品。若要新增，請開啟後台設定。</div>';
+      } else {
+        dom.drugStrip.innerHTML = location.items.map((item, index) => {
+          const entry = entries[entryKey(location.id, index)];
+          const done = isEntryDone(location.id, index);
+          const notFound = Boolean(entry?.notFound);
+          const qty = notFound ? '找不到庫存' : (entry?.quantity ? escapeHtml(entry.quantity) : '未輸入');
+          const expiry = notFound ? '不用填寫' : (entry?.expiryDate ? escapeHtml(entry.expiryDate) : '未輸入');
+          const statusText = notFound ? '找不到庫存' : (done ? '已完成' : '待輸入');
+          return `
+            <button class="drug-card ${done ? 'done' : ''}" data-drug-index="${index}">
+              <span>
+                <strong>${escapeHtml(item.drugName)}</strong>
+                <span class="drug-meta">料位號：${escapeHtml(item.slotNo || '未設定')}</span>
+              </span>
+              <span class="drug-meta">
+                數量：${qty}<br>
+                效期：${expiry}
+              </span>
+              <span class="status-pill ${done ? 'done' : ''} ${notFound ? 'not-found' : ''}">${statusText}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      renderSummary();
+      renderCabinetArt();
+      renderAdminList();
+    }
+
+    function renderSummary() {
+      const allItems = config.locations.flatMap((location) => location.items.map((item, index) => ({ location, item, index })));
+      const done = allItems.filter(({ location, index }) => isEntryDone(location.id, index)).length;
+      dom.totalDrugCount.textContent = allItems.length;
+      dom.doneDrugCount.textContent = done;
+      dom.missingDrugCount.textContent = Math.max(0, allItems.length - done);
+    }
+
+    function renderAdmin() {
+      dom.title.textContent = config.cabinetName + ' 盤點';
+      dom.cabinetNameInput.value = config.cabinetName;
+      dom.cabinetIdInput.value = config.cabinetId;
+      dom.configText.value = JSON.stringify(config, null, 2);
+      renderLocationList();
+      renderAdminList();
+    }
+
+    function renderAdminList() {
+      const location = getLocation(currentLocationId || dom.locationSelect.value || config.locations[0]?.id);
+      if (!location) {
+        dom.adminDrugList.innerHTML = '<div class="empty-state">請先選擇位置。</div>';
+        return;
+      }
+
+      if (!location.items.length) {
+        dom.adminDrugList.innerHTML = '<div class="empty-state">此位置尚未加入藥品。</div>';
+        return;
+      }
+
+      dom.adminDrugList.innerHTML = location.items.map((item, index) => `
+        <div class="drug-row">
+          <div class="admin-drug-fields">
+            <input data-edit-index="${index}" data-edit-field="drugName" value="${escapeAttr(item.drugName)}" aria-label="藥品名稱">
+            <input data-edit-index="${index}" data-edit-field="slotNo" value="${escapeAttr(item.slotNo || '')}" aria-label="料位號" placeholder="未設定料位">
+          </div>
+          <div class="admin-row-actions">
+            <button class="button-secondary button-small" data-move-index="${index}" data-direction="-1" ${index === 0 ? 'disabled' : ''} aria-label="上移">↑</button>
+            <button class="button-secondary button-small" data-move-index="${index}" data-direction="1" ${index === location.items.length - 1 ? 'disabled' : ''} aria-label="下移">↓</button>
+            <button class="button-secondary button-small" data-remove-index="${index}">移除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getEditingLocation() {
+      return getLocation(currentLocationId || dom.locationSelect.value || config.locations[0]?.id);
+    }
+
+    function selectLocation(locationId) {
+      currentLocationId = locationId;
+      renderDrugStrip();
+      renderLocationList();
+    }
+
+    function closeDrugList() {
+      currentLocationId = '';
+      closeDrugModal();
+      renderDrugStrip();
+      renderLocationList();
+    }
+
+    function openDrugModal(index) {
+      const location = getLocation(currentLocationId);
+      const item = location?.items[index];
+      if (!location || !item) return;
+
+      activeLocationId = location.id;
+      activeDrugIndex = index;
+      const entry = entries[entryKey(location.id, index)] || {};
+      dom.modalTitle.textContent = item.drugName;
+      dom.modalMeta.textContent = location.name + '｜料位號：' + (item.slotNo || '未設定');
+      dom.qtyInput.value = entry.notFound ? '' : (entry.quantity || '');
+      dom.expiryInput.value = entry.notFound ? '' : (entry.expiryDate || '');
+      document.body.classList.add('modal-open');
+      dom.modal.classList.add('show');
+    }
+
+    function closeDrugModal() {
+      dom.modal.classList.remove('show');
+      document.body.classList.remove('modal-open');
+      activeDrugIndex = -1;
+      activeLocationId = '';
+    }
+
+    function autoSaveDrugEntry(options = {}) {
+      if (!activeLocationId || activeDrugIndex < 0) return;
+      const key = entryKey(activeLocationId, activeDrugIndex);
+      const quantity = dom.qtyInput.value.trim();
+      const expiryDate = dom.expiryInput.value.trim();
+      if (quantity || expiryDate) {
+        entries[key] = { quantity, expiryDate, notFound: false };
+      } else {
+        delete entries[key];
+      }
+      saveEntries({ quiet: true });
+
+      const renderWithPosition = () => {
+        const scrollLeft = dom.drugStrip.scrollLeft;
+        renderDrugStrip();
+        dom.drugStrip.scrollLeft = scrollLeft;
+      };
+
+      window.clearTimeout(autoSaveDrugEntry.timer);
+      if (options.immediate) {
+        updateSaveStatus('盤點資料已自動儲存');
+        renderWithPosition();
+        return;
+      }
+      autoSaveDrugEntry.timer = window.setTimeout(() => {
+        updateSaveStatus('盤點資料已自動儲存');
+        renderWithPosition();
+      }, 260);
+    }
+
+    function saveDrugEntry() {
+      if (!activeLocationId || activeDrugIndex < 0) return;
+      dom.qtyInput.value = evaluateQty(dom.qtyInput.value);
+      autoSaveDrugEntry({ immediate: true });
+      closeDrugModal();
+      showToast('已自動儲存');
+    }
+
+    function markDrugNotFound() {
+      if (!activeLocationId || activeDrugIndex < 0) return;
+      dom.qtyInput.value = '';
+      dom.expiryInput.value = '';
+      entries[entryKey(activeLocationId, activeDrugIndex)] = {
+        quantity: '',
+        expiryDate: '',
+        notFound: true
+      };
+      saveEntries();
+      closeDrugModal();
+      renderDrugStrip();
+      showToast('已標記找不到庫存');
+    }
+
+    function deleteDrugEntry() {
+      if (!activeLocationId || activeDrugIndex < 0) return;
+      delete entries[entryKey(activeLocationId, activeDrugIndex)];
+      saveEntries();
+      closeDrugModal();
+      renderDrugStrip();
+      showToast('已清除本筆');
+    }
+
+    function evaluateQty(value) {
+      const original = String(value || '').replace(/\s/g, '');
+      const raw = original.replace(/×/g, '*');
+      if (!raw) return '';
+      if (/[+\-*]$/.test(raw)) return original;
+      if (!/^[0-9.+*\-]+$/.test(raw)) return raw;
+      try {
+        const parts = raw.match(/[+-]?[^+-]+/g) || [];
+        const total = parts.reduce((sum, part) => {
+          const sign = part.startsWith('-') ? -1 : 1;
+          const term = part.replace(/^[+-]/, '');
+          if (!term) throw new Error('empty term');
+          const factors = term.split('*');
+          if (factors.some((factor) => factor === '' || Number.isNaN(Number(factor)))) {
+            throw new Error('invalid factor');
+          }
+          const product = factors.reduce((subtotal, factor) => subtotal * Number(factor), 1);
+          return sum + (sign * product);
+        }, 0);
+        return Number.isFinite(total) ? trimNumber(total) : raw;
+      } catch {
+        return raw;
+      }
+    }
+
+    function trimNumber(number) {
+      return String(Number(number.toFixed(4)));
+    }
+
+    function handleCalcKey(key) {
+      const input = dom.qtyInput;
+      if (key === 'clear') {
+        input.value = '';
+      } else if (key === 'back') {
+        input.value = input.value.slice(0, -1);
+      } else if (key === '=') {
+        input.value = evaluateQty(input.value);
+      } else {
+        input.value += key === '*' ? '×' : key;
+      }
+      autoSaveDrugEntry();
+    }
+
+    function exportCsv() {
+      const rows = [['藥品名稱', '數量', '效期']];
+      config.locations.forEach((location) => {
+        location.items.forEach((item, index) => {
+          const entry = entries[entryKey(location.id, index)] || {};
+          rows.push([
+            item.drugName,
+            entry.notFound ? '找不到庫存' : (entry.quantity || ''),
+            entry.notFound ? '' : (entry.expiryDate || '')
+          ]);
+        });
+      });
+
+      downloadText(
+        safeFileName(config.cabinetName) + '_盤點結果.csv',
+        '\ufeff' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n'),
+        'text/csv;charset=utf-8'
+      );
+    }
+
+    function exportConfig() {
+      downloadText(
+        safeFileName(config.cabinetName) + '_位置設定.json',
+        JSON.stringify(config, null, 2),
+        'application/json;charset=utf-8'
+      );
+    }
+
+    async function applyConfigValue(nextConfig) {
+      const oldCabinetId = config.cabinetId;
+      config = normalizeConfig(nextConfig);
+      currentLocationId = '';
+      entries = await loadEntries(config.cabinetId);
+      if (oldCabinetId !== config.cabinetId) {
+        persistRecord(storagePrefix + 'lastCabinetId', config.cabinetId);
+      }
+      saveConfig();
+      renderAll();
+    }
+
+    async function applyConfigFromText() {
+      try {
+        await applyConfigValue(JSON.parse(dom.configText.value));
+        showToast('已套用位置設定');
+      } catch (error) {
+        showToast('JSON 格式無法讀取，請檢查逗號與括號');
+      }
+    }
+
+    function importConfigFromFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          await applyConfigValue(JSON.parse(String(reader.result || '')));
+          dom.configText.value = JSON.stringify(config, null, 2);
+          showToast('已匯入位置設定');
+        } catch {
+          showToast('JSON 檔案無法讀取，請確認是位置設定備份檔');
+        } finally {
+          dom.importConfigInput.value = '';
+        }
+      };
+      reader.onerror = () => {
+        showToast('無法讀取此檔案');
+        dom.importConfigInput.value = '';
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function addDrugToLocation() {
+      const location = getEditingLocation();
+      const drugName = dom.drugNameInput.value.trim();
+      const slotNo = dom.slotNoInput.value.trim();
+      if (!location) return;
+      if (!drugName) {
+        showToast('請輸入藥品名稱');
+        dom.drugNameInput.focus();
+        return;
+      }
+      location.items.push({ drugName, slotNo });
+      dom.drugNameInput.value = '';
+      dom.slotNoInput.value = '';
+      saveConfig();
+      renderAll();
+      showToast('已加入藥品');
+    }
+
+    function splitPastedLine(line) {
+      if (line.includes('\t')) return line.split('\t');
+      return line.split(',').map((cell) => cell.replace(/^"|"$/g, '').replace(/""/g, '"'));
+    }
+
+    function normalizeHeader(value) {
+      return String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+    }
+
+    function parseExcelPaste(text) {
+      const rows = String(text || '')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .split('\n')
+        .map((line) => splitPastedLine(line).map((cell) => String(cell || '').trim()))
+        .filter((row) => row.some(Boolean));
+
+      if (!rows.length) return { items: [], hasLocationColumn: false };
+
+      const firstRowHeaders = rows[0].map(normalizeHeader);
+      const findColumn = (names) => firstRowHeaders.findIndex((header) => names.some((name) => header.includes(name)));
+      let locationIndex = findColumn(['位置', '層架', '抽屜', 'location', 'loc']);
+      let drugIndex = findColumn(['藥品名稱', '藥名', '品名', 'drugname', 'drug', 'name']);
+      let slotIndex = findColumn(['料位號', '料位', 'slotno', 'slot', '格位']);
+      const hasHeader = drugIndex >= 0 || slotIndex >= 0 || locationIndex >= 0;
+      const dataRows = hasHeader ? rows.slice(1) : rows;
+
+      if (!hasHeader) {
+        if (rows[0].length >= 3) {
+          locationIndex = 0;
+          drugIndex = 1;
+          slotIndex = 2;
+        } else {
+          locationIndex = -1;
+          drugIndex = 0;
+          slotIndex = 1;
+        }
+      } else if (drugIndex < 0) {
+        drugIndex = locationIndex === 0 ? 1 : 0;
+      }
+
+      return {
+        hasLocationColumn: locationIndex >= 0,
+        items: dataRows.map((row) => ({
+          locationName: locationIndex >= 0 ? String(row[locationIndex] || '').trim() : '',
+          drugName: String(row[drugIndex] || '').trim(),
+          slotNo: slotIndex >= 0 ? String(row[slotIndex] || '').trim() : ''
+        })).filter((item) => item.drugName)
+      };
+    }
+
+    function normalizeLocationKey(value) {
+      return String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+    }
+
+    function findLocationByPasteName(value) {
+      const key = normalizeLocationKey(value);
+      if (!key) return null;
+      return config.locations.find((location) => {
+        return normalizeLocationKey(location.id) === key || normalizeLocationKey(location.name) === key;
+      }) || null;
+    }
+
+    function importPastedDrugs({ replace = false } = {}) {
+      const parsed = parseExcelPaste(dom.bulkPasteInput.value);
+      if (!parsed.items.length) {
+        showToast('沒有讀到可匯入的藥品資料');
+        dom.bulkPasteInput.focus();
+        return;
+      }
+
+      const touchedLocationIds = new Set();
+      const unmatchedLocations = new Set();
+      const selectedLocation = getEditingLocation();
+
+      if (replace) {
+        const replaceTarget = parsed.hasLocationColumn ? '貼上內容中對應的位置' : '目前選取的位置';
+        if (!confirm('覆蓋匯入會清除' + replaceTarget + '原本的藥品設定與已輸入盤點資料。確定要繼續嗎？')) return;
+        if (parsed.hasLocationColumn) {
+          parsed.items.forEach((item) => {
+            const location = findLocationByPasteName(item.locationName);
+            if (location && !touchedLocationIds.has(location.id)) {
+              location.items = [];
+              cleanEntriesForLocation(location.id);
+              touchedLocationIds.add(location.id);
+            }
+          });
+        } else if (selectedLocation) {
+          selectedLocation.items = [];
+          cleanEntriesForLocation(selectedLocation.id);
+          touchedLocationIds.add(selectedLocation.id);
+        }
+      }
+
+      let importedCount = 0;
+      parsed.items.forEach((item) => {
+        const location = parsed.hasLocationColumn ? findLocationByPasteName(item.locationName) : selectedLocation;
+        if (!location) {
+          if (item.locationName) unmatchedLocations.add(item.locationName);
+          return;
+        }
+        location.items.push({ drugName: item.drugName, slotNo: item.slotNo });
+        touchedLocationIds.add(location.id);
+        importedCount += 1;
+      });
+
+      if (!importedCount) {
+        showToast('找不到可匯入的位置，請確認位置欄名稱');
+        return;
+      }
+
+      saveConfig();
+      saveEntries();
+      renderAll();
+      const skipped = unmatchedLocations.size ? '，略過 ' + unmatchedLocations.size + ' 個未知位置' : '';
+      showToast('已匯入 ' + importedCount + ' 筆藥品' + skipped);
+    }
+
+    function editDrugInLocation(index, field, value) {
+      const location = getEditingLocation();
+      if (!location || !location.items[index] || !['drugName', 'slotNo'].includes(field)) return;
+      location.items[index][field] = value.trim();
+      saveConfig();
+      renderDrugStrip();
+      renderCabinetArt();
+      dom.configText.value = JSON.stringify(config, null, 2);
+    }
+
+    function remapLocationEntries(locationId, mapIndex) {
+      const nextEntries = {};
+      Object.entries(entries).forEach(([key, value]) => {
+        if (!key.startsWith(locationId + '::')) {
+          nextEntries[key] = value;
+          return;
+        }
+        const oldIndex = Number(key.split('::')[1]);
+        const newIndex = mapIndex(oldIndex);
+        if (Number.isInteger(newIndex) && newIndex >= 0) {
+          nextEntries[entryKey(locationId, newIndex)] = value;
+        }
+      });
+      entries = nextEntries;
+    }
+
+    function moveDrugInLocation(index, direction) {
+      const location = getEditingLocation();
+      if (!location) return;
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= location.items.length) return;
+      [location.items[index], location.items[targetIndex]] = [location.items[targetIndex], location.items[index]];
+      remapLocationEntries(location.id, (oldIndex) => {
+        if (oldIndex === index) return targetIndex;
+        if (oldIndex === targetIndex) return index;
+        return oldIndex;
+      });
+      saveConfig();
+      saveEntries();
+      renderAll();
+      showToast('已調整順序');
+    }
+
+    function removeDrugFromLocation(index) {
+      const location = getEditingLocation();
+      if (!location) return;
+      location.items.splice(index, 1);
+      remapLocationEntries(location.id, (oldIndex) => {
+        if (oldIndex === index) return -1;
+        return oldIndex > index ? oldIndex - 1 : oldIndex;
+      });
+      saveConfig();
+      saveEntries();
+      renderAll();
+    }
+
+    function cleanEntriesForLocation(locationId) {
+      Object.keys(entries).forEach((key) => {
+        if (key.startsWith(locationId + '::')) delete entries[key];
+      });
+    }
+
+    function clearLocation() {
+      const location = getEditingLocation();
+      if (!location) return;
+      if (!confirm('確定要清空「' + location.name + '」的藥品設定嗎？')) return;
+      location.items = [];
+      cleanEntriesForLocation(location.id);
+      saveConfig();
+      saveEntries();
+      renderAll();
+      showToast('此位置已清空');
+    }
+
+    function resetDemo() {
+      if (!confirm('確定要還原範例設定？目前位置設定會被覆蓋。')) return;
+      config = clone(defaultConfig);
+      entries = {};
+      currentLocationId = '';
+      removeRecord(storagePrefix + 'config:' + config.cabinetId);
+      removeRecord(storagePrefix + 'entries:' + config.cabinetId);
+      persistRecord(storagePrefix + 'lastCabinetId', config.cabinetId);
+      renderAll();
+      showToast('已還原範例設定');
+    }
+
+    function downloadStandaloneHtml() {
+      const doc = document.documentElement.cloneNode(true);
+      const configScript = doc.querySelector('#cabinet-config');
+      configScript.textContent = '\n' + JSON.stringify(config, null, 2) + '\n';
+      doc.querySelector('#drugModal')?.classList.remove('show');
+      doc.querySelector('#adminPanel')?.classList.remove('show');
+      const html = '<!doctype html>\n' + doc.outerHTML;
+      downloadText(
+        safeFileName(config.cabinetName) + '_離線盤點.html',
+        html,
+        'text/html;charset=utf-8'
+      );
+    }
+
+    function downloadText(fileName, text, type) {
+      const blob = new Blob([text], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function csvCell(value) {
+      const text = String(value ?? '');
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function safeFileName(name) {
+      return String(name || '藥櫃').replace(/[\\/:*?"<>|]/g, '_');
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replace(/`/g, '&#096;');
+    }
+
+    function showToast(message) {
+      dom.toast.textContent = message;
+      dom.toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => {
+        dom.toast.classList.remove('show');
+      }, 2200);
+    }
+
+    function renderAll() {
+      dom.title.textContent = config.cabinetName + ' 盤點';
+      renderCabinetArt();
+      renderDrugStrip();
+      renderAdmin();
+    }
+
+    async function initApp() {
+      config = await loadConfig();
+      entries = await loadEntries(config.cabinetId);
+      currentLocationId = '';
+      renderAll();
+    }
+
+    dom.cabinetSvg.addEventListener('click', (event) => {
+      const target = event.target.closest('[data-location-id]');
+      if (!target) return;
+      selectLocation(target.dataset.locationId);
+    });
+
+    dom.drugStrip.addEventListener('click', (event) => {
+      const card = event.target.closest('[data-drug-index]');
+      if (!card) return;
+      openDrugModal(Number(card.dataset.drugIndex));
+    });
+
+    function toggleAdminPanel() {
+      dom.adminPanel.classList.toggle('show');
+      renderAdmin();
+    }
+
+    function closeAdminPanel() {
+      dom.adminPanel.classList.remove('show');
+    }
+
+    dom.adminToggleBtn.addEventListener('click', toggleAdminPanel);
+    dom.mobileAdminToggleBtn.addEventListener('click', () => {
+      toggleAdminPanel();
+      dom.mobileAdminToggleBtn.closest('details')?.removeAttribute('open');
+    });
+    dom.adminCloseBtn.addEventListener('click', closeAdminPanel);
+
+    dom.exportCsvBtn.addEventListener('click', exportCsv);
+    dom.mobileExportCsvBtn.addEventListener('click', () => {
+      exportCsv();
+      dom.mobileExportCsvBtn.closest('details')?.removeAttribute('open');
+    });
+    dom.exportConfigBtn.addEventListener('click', exportConfig);
+    dom.importConfigBtn.addEventListener('click', () => dom.importConfigInput.click());
+    dom.importConfigInput.addEventListener('change', () => importConfigFromFile(dom.importConfigInput.files?.[0]));
+    dom.applyConfigBtn.addEventListener('click', applyConfigFromText);
+    dom.resetDemoBtn.addEventListener('click', resetDemo);
+    dom.downloadHtmlBtn.addEventListener('click', downloadStandaloneHtml);
+    dom.addDrugBtn.addEventListener('click', addDrugToLocation);
+    dom.clearLocationBtn.addEventListener('click', clearLocation);
+    dom.bulkAppendBtn.addEventListener('click', () => importPastedDrugs({ replace: false }));
+    dom.bulkReplaceBtn.addEventListener('click', () => importPastedDrugs({ replace: true }));
+    dom.bulkClearBtn.addEventListener('click', () => {
+      dom.bulkPasteInput.value = '';
+      dom.bulkPasteInput.focus();
+    });
+
+    dom.cabinetNameInput.addEventListener('change', () => {
+      config.cabinetName = dom.cabinetNameInput.value.trim() || '未命名藥櫃';
+      saveConfig();
+      renderAll();
+    });
+
+    dom.cabinetIdInput.addEventListener('change', () => {
+      const oldCabinetId = config.cabinetId;
+      const nextCabinetId = dom.cabinetIdInput.value.trim() || oldCabinetId;
+      config.cabinetId = nextCabinetId;
+      if (oldCabinetId !== nextCabinetId) {
+        persistRecord(storagePrefix + 'entries:' + nextCabinetId, entries);
+      }
+      saveConfig();
+      renderAll();
+    });
+
+    dom.locationSelect.addEventListener('change', () => {
+      selectLocation(dom.locationSelect.value);
+    });
+
+    dom.closeDrugListBtn.addEventListener('click', closeDrugList);
+
+    dom.adminDrugList.addEventListener('click', (event) => {
+      const removeButton = event.target.closest('[data-remove-index]');
+      if (removeButton) {
+        removeDrugFromLocation(Number(removeButton.dataset.removeIndex));
+        return;
+      }
+      const moveButton = event.target.closest('[data-move-index]');
+      if (moveButton) {
+        moveDrugInLocation(Number(moveButton.dataset.moveIndex), Number(moveButton.dataset.direction));
+      }
+    });
+
+    dom.adminDrugList.addEventListener('change', (event) => {
+      const input = event.target.closest('[data-edit-index]');
+      if (!input) return;
+      editDrugInLocation(Number(input.dataset.editIndex), input.dataset.editField, input.value);
+    });
+
+    dom.closeModalBtn.addEventListener('click', closeDrugModal);
+    dom.modal.addEventListener('click', (event) => {
+      if (event.target === dom.modal) closeDrugModal();
+    });
+    dom.saveEntryBtn.addEventListener('click', saveDrugEntry);
+    dom.deleteEntryBtn.addEventListener('click', deleteDrugEntry);
+    dom.notFoundBtn.addEventListener('click', markDrugNotFound);
+    dom.expiryInput.addEventListener('input', () => autoSaveDrugEntry());
+    dom.expiryInput.addEventListener('change', () => autoSaveDrugEntry({ immediate: true }));
+
+    document.querySelector('.calc').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-key]');
+      if (!button) return;
+      handleCalcKey(button.dataset.key);
+    });
+    dom.qtyBackBtn.addEventListener('click', () => handleCalcKey('back'));
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && dom.modal.classList.contains('show')) {
+        closeDrugModal();
+      } else if (event.key === 'Escape' && dom.adminPanel.classList.contains('show')) {
+        closeAdminPanel();
+      }
+    });
+
+    initApp();
+  </script>
+</body>
+</html>
+
+
