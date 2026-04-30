@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>智慧藥櫃離線盤點</title>
   <style>
     :root {
@@ -23,12 +23,17 @@
 
     * { box-sizing: border-box; }
 
+    html {
+      touch-action: manipulation;
+    }
+
     body {
       margin: 0;
       color: var(--ink);
       background: var(--bg);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       letter-spacing: 0;
+      touch-action: manipulation;
     }
 
     button,
@@ -47,6 +52,10 @@
       color: #fff;
       background: var(--blue);
       transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     button:hover { background: var(--blue-dark); }
@@ -678,6 +687,9 @@
       background: #F4F4F2;
       border: 1px solid var(--line);
       font-weight: 700;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .calc button:hover { background: #E3E3DF; }
@@ -2778,6 +2790,11 @@
       if (!button) return;
       handleCalcKey(button.dataset.key);
     });
+    document.querySelector('.calc').addEventListener('dblclick', (event) => {
+      if (event.target.closest('[data-key]')) {
+        event.preventDefault();
+      }
+    }, { passive: false });
     dom.qtyBackBtn.addEventListener('click', () => handleCalcKey('back'));
 
     document.addEventListener('keydown', (event) => {
