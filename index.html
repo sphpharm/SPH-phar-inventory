@@ -806,6 +806,68 @@
       grid-column: span 2;
     }
 
+    .calc-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .calc-total {
+      color: #3E3D39;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .calc-add-btn {
+      min-height: 38px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+    }
+
+    .calc-history {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .calc-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 9px 8px 11px;
+      color: #3F3E3A;
+      background: #F7F7F5;
+      border: 1px solid rgba(213, 213, 209, .9);
+      border-radius: 12px;
+      box-shadow: 0 6px 14px rgba(17, 17, 17, .045);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .calc-line-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calc-line-delete {
+      width: 28px;
+      min-width: 28px;
+      min-height: 28px;
+      padding: 0;
+      color: #F4F4F2;
+      background: #4D4D49;
+      border: 1px solid #4D4D49;
+      border-radius: 999px;
+      box-shadow: 0 5px 12px rgba(17, 17, 17, .12);
+      font-size: 17px;
+      line-height: 1;
+    }
+
     .modal-footer {
       display: flex;
       justify-content: space-between;
@@ -1445,6 +1507,26 @@
         color: #fff;
         background: #111111;
         border-color: #111111;
+      }
+
+      .calc-actions {
+        margin-top: 9px;
+      }
+
+      .calc-total {
+        font-size: 13px;
+      }
+
+      .calc-add-btn {
+        min-height: 40px;
+        padding: 8px 15px;
+        box-shadow: 0 8px 18px rgba(17, 17, 17, .10);
+      }
+
+      .calc-history {
+        max-height: 118px;
+        overflow-y: auto;
+        padding-right: 2px;
       }
 
       .modal-footer {
@@ -19691,6 +19773,11 @@
             <button data-key="clear" class="op">C</button>
             <button data-key="=" class="op">=</button>
           </div>
+          <div class="calc-actions">
+            <span id="calcTotalLabel" class="calc-total">目前總量：0</span>
+            <button id="calcAddLineBtn" class="calc-add-btn button-secondary" type="button">加入明細</button>
+          </div>
+          <div id="calcHistoryList" class="calc-history" aria-label="數量計算明細"></div>
         </div>
         <div class="field">
           <label for="expiryInput">效期</label>
@@ -19735,6 +19822,8 @@
     let currentLocationId = '';
     let activeDrugIndex = -1;
     let activeLocationId = '';
+    let activeCalcLines = [];
+    let calcStartsNewDraft = false;
     let entries = {};
 
     const $ = (selector) => document.querySelector(selector);
@@ -19793,6 +19882,9 @@
       closeModalBtn: $('#closeModalBtn'),
       qtyInput: $('#qtyInput'),
       qtyBackBtn: $('#qtyBackBtn'),
+      calcAddLineBtn: $('#calcAddLineBtn'),
+      calcTotalLabel: $('#calcTotalLabel'),
+      calcHistoryList: $('#calcHistoryList'),
       expiryInput: $('#expiryInput'),
       notFoundBtn: $('#notFoundBtn'),
       saveEntryBtn: $('#saveEntryBtn'),
@@ -20341,8 +20433,11 @@
       const entry = entries[entryKey(location.id, index)] || {};
       dom.modalTitle.textContent = item.drugName;
       dom.modalMeta.textContent = location.name + '｜料位號：' + (item.slotNo || '未設定');
+      activeCalcLines = normalizeCalcLines(entry.calcLines);
       dom.qtyInput.value = entry.notFound ? '' : (entry.quantity || '');
+      calcStartsNewDraft = activeCalcLines.length > 0;
       dom.expiryInput.value = entry.notFound ? '' : (entry.expiryDate || '');
+      renderCalcHistory();
       document.body.classList.add('modal-open');
       dom.modal.classList.add('show');
     }
@@ -20362,15 +20457,26 @@
       document.body.classList.remove('modal-open');
       activeDrugIndex = -1;
       activeLocationId = '';
+      activeCalcLines = [];
+      calcStartsNewDraft = false;
     }
 
     function autoSaveDrugEntry(options = {}) {
       if (!activeLocationId || activeDrugIndex < 0) return;
       const key = entryKey(activeLocationId, activeDrugIndex);
-      const quantity = dom.qtyInput.value.trim();
+      const lineTotal = activeCalcLines.length ? trimNumber(calcLinesTotal(activeCalcLines)) : '';
+      const hasDraftInProgress = activeCalcLines.length
+        && !calcStartsNewDraft
+        && dom.qtyInput.value.trim() !== lineTotal;
+      const quantity = activeCalcLines.length ? lineTotal : dom.qtyInput.value.trim();
       const expiryDate = dom.expiryInput.value.trim();
-      if (quantity || expiryDate) {
-        entries[key] = { quantity, expiryDate, notFound: false };
+      if (activeCalcLines.length && !hasDraftInProgress) {
+        dom.qtyInput.value = quantity;
+      }
+      if (quantity || expiryDate || activeCalcLines.length) {
+        const nextEntry = { quantity, expiryDate, notFound: false };
+        if (activeCalcLines.length) nextEntry.calcLines = clone(activeCalcLines);
+        entries[key] = nextEntry;
       } else {
         delete entries[key];
       }
@@ -20406,6 +20512,8 @@
       if (!activeLocationId || activeDrugIndex < 0) return;
       dom.qtyInput.value = '';
       dom.expiryInput.value = '';
+      activeCalcLines = [];
+      calcStartsNewDraft = false;
       entries[entryKey(activeLocationId, activeDrugIndex)] = {
         quantity: '',
         expiryDate: '',
@@ -20420,10 +20528,25 @@
     function deleteDrugEntry() {
       if (!activeLocationId || activeDrugIndex < 0) return;
       delete entries[entryKey(activeLocationId, activeDrugIndex)];
+      activeCalcLines = [];
+      calcStartsNewDraft = false;
       saveEntries();
       closeDrugModal();
       renderDrugStrip();
       showToast('已清除本筆');
+    }
+
+    function normalizeCalcLines(lines) {
+      return Array.isArray(lines)
+        ? lines.map((line) => ({
+          expression: String(line.expression || '').trim(),
+          total: Number(line.total)
+        })).filter((line) => line.expression && Number.isFinite(line.total))
+        : [];
+    }
+
+    function calcLinesTotal(lines) {
+      return lines.reduce((sum, line) => sum + Number(line.total || 0), 0);
     }
 
     function evaluateQty(value) {
@@ -20455,32 +20578,96 @@
       return String(Number(number.toFixed(4)));
     }
 
+    function calcDraftValue() {
+      const draft = dom.qtyInput.value.trim();
+      if (!draft) return null;
+      const evaluated = evaluateQty(draft);
+      if (evaluated === '' || Number.isNaN(Number(evaluated))) return null;
+      return {
+        expression: draft,
+        total: Number(evaluated)
+      };
+    }
+
+    function renderCalcHistory() {
+      const total = calcLinesTotal(activeCalcLines);
+      dom.calcTotalLabel.textContent = '目前總量：' + trimNumber(total);
+      dom.calcHistoryList.innerHTML = activeCalcLines.length
+        ? activeCalcLines.map((line, index) => `
+          <div class="calc-line">
+            <span class="calc-line-text">${escapeHtml(line.expression)} = ${escapeHtml(trimNumber(line.total))}</span>
+            <button class="calc-line-delete" type="button" data-calc-line-index="${index}" aria-label="刪除此筆計算明細">×</button>
+          </div>
+        `).join('')
+        : '<div class="calc-line"><span class="calc-line-text">尚未加入明細，可直接輸入總量，或用乘法算完後按加入明細。</span></div>';
+    }
+
+    function addCalcLine() {
+      if (!activeLocationId || activeDrugIndex < 0) return;
+      if (calcStartsNewDraft && activeCalcLines.length) {
+        showToast('請先輸入下一筆明細');
+        return;
+      }
+      const line = calcDraftValue();
+      if (!line) {
+        showToast('請先輸入可計算的數量');
+        return;
+      }
+      activeCalcLines.push(line);
+      dom.qtyInput.value = trimNumber(calcLinesTotal(activeCalcLines));
+      calcStartsNewDraft = true;
+      renderCalcHistory();
+      autoSaveDrugEntry({ immediate: true });
+      showToast('已加入計算明細');
+    }
+
+    function deleteCalcLine(index) {
+      if (index < 0 || index >= activeCalcLines.length) return;
+      activeCalcLines.splice(index, 1);
+      dom.qtyInput.value = activeCalcLines.length ? trimNumber(calcLinesTotal(activeCalcLines)) : '';
+      calcStartsNewDraft = activeCalcLines.length > 0;
+      renderCalcHistory();
+      autoSaveDrugEntry({ immediate: true });
+      showToast('已刪除此筆明細');
+    }
+
     function handleCalcKey(key) {
       const input = dom.qtyInput;
       if (key === 'clear') {
         input.value = '';
+        calcStartsNewDraft = false;
       } else if (key === 'back') {
         input.value = input.value.slice(0, -1);
+        calcStartsNewDraft = false;
       } else if (key === '=') {
         input.value = evaluateQty(input.value);
+        calcStartsNewDraft = false;
       } else {
+        if (calcStartsNewDraft && /[0-9.]/.test(key)) {
+          input.value = '';
+        }
+        calcStartsNewDraft = false;
         input.value += key === '*' ? '×' : key;
       }
       autoSaveDrugEntry();
     }
 
     function createCsvExport() {
-      const rows = [['調劑台', '位置', '料位號', '藥品名稱', '數量', '效期']];
+      const rows = [['調劑台', '位置', '料位號', '藥品名稱', '數量', '效期', '計算明細']];
       config.locations.forEach((location) => {
         location.items.forEach((item, index) => {
           const entry = entries[entryKey(location.id, index)] || {};
+          const calcNote = normalizeCalcLines(entry.calcLines)
+            .map((line) => line.expression + '=' + trimNumber(line.total))
+            .join('; ');
           rows.push([
             config.cabinetName,
             location.name,
             item.slotNo || '',
             item.drugName,
             entry.notFound ? '找不到庫存' : (entry.quantity || ''),
-            entry.notFound ? '' : (entry.expiryDate || '')
+            entry.notFound ? '' : (entry.expiryDate || ''),
+            entry.notFound ? '找不到庫存' : calcNote
           ]);
         });
       });
@@ -21268,6 +21455,12 @@
       }
     }, { passive: false });
     dom.qtyBackBtn.addEventListener('click', () => handleCalcKey('back'));
+    dom.calcAddLineBtn.addEventListener('click', addCalcLine);
+    dom.calcHistoryList.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-calc-line-index]');
+      if (!button) return;
+      deleteCalcLine(Number(button.dataset.calcLineIndex));
+    });
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && dom.modal.classList.contains('show')) {
