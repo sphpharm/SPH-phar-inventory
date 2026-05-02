@@ -1107,7 +1107,7 @@
         right: 12px;
         z-index: 16;
         display: block;
-        max-height: 224px;
+        max-height: 286px;
         border: 1px solid rgba(255, 255, 255, .78);
         border-radius: 20px;
         background: rgba(232, 232, 228, .96);
@@ -1189,9 +1189,11 @@
       }
 
       .drug-strip {
-        min-height: 166px;
-        padding: 12px 22px 58px;
+        align-items: center;
+        min-height: 198px;
+        padding: 18px 22px 30px;
         scroll-padding-left: 22px;
+        scroll-padding-right: 22px;
         gap: 10px;
         background: #E4E4E0;
       }
@@ -20345,6 +20347,16 @@
       dom.modal.classList.add('show');
     }
 
+    function centerDrugCard(card) {
+      if (!card) return;
+      const strip = dom.drugStrip;
+      const targetLeft = card.offsetLeft - ((strip.clientWidth - card.offsetWidth) / 2);
+      strip.scrollTo({
+        left: Math.max(0, targetLeft),
+        behavior: 'smooth'
+      });
+    }
+
     function closeDrugModal() {
       dom.modal.classList.remove('show');
       document.body.classList.remove('modal-open');
@@ -21140,6 +21152,7 @@
     dom.drugStrip.addEventListener('click', (event) => {
       const card = event.target.closest('[data-drug-index]');
       if (!card) return;
+      centerDrugCard(card);
       openDrugModal(Number(card.dataset.drugIndex));
     });
 
