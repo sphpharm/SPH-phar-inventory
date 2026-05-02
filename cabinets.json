@@ -3,5 +3,10 @@
     "name": "口服藥 1",
     "file": "oral-1.html",
     "group": "口服藥"
+  },
+  {
+    "name": "外用1",
+    "file": "ext-1.html",
+    "group": "外用"
   }
 ]
