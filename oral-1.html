@@ -2435,6 +2435,16 @@
     }
 
     async function applyConfigValue(nextConfig) {
+      const collection = normalizeImportedCollection(nextConfig);
+      if (collection.length) {
+        cabinetCollection = collection;
+        config = cabinetCollection[0];
+        currentLocationId = '';
+        entries = await loadEntries(config.cabinetId);
+        saveConfig();
+        renderAll();
+        return;
+      }
       const oldCabinetId = config.cabinetId;
       config = normalizeConfig(nextConfig);
       currentLocationId = '';
@@ -2444,6 +2454,20 @@
       }
       saveConfig();
       renderAll();
+    }
+
+    function normalizeImportedCollection(value) {
+      if (Array.isArray(value)) {
+        return value.filter((item) => item && item.locations).map(normalizeConfig);
+      }
+      if (Array.isArray(value?.cabinetCollection)) {
+        return value.cabinetCollection.filter((item) => item && item.locations).map(normalizeConfig);
+      }
+      if (value && typeof value === 'object') {
+        const flattened = Object.values(value).flatMap((entry) => Array.isArray(entry) ? entry : []);
+        return flattened.filter((item) => item && item.locations).map(normalizeConfig);
+      }
+      return [];
     }
 
     async function applyConfigFromText() {
@@ -2478,7 +2502,7 @@
 
     function ensureXlsxLibrary() {
       if (window.XLSX) return true;
-      showToast('Excel 匯入元件尚未載入，請確認網路可連線後重新開啟網頁');
+      showToast('Excel 匯入元件沒有載入，院內網路可能擋住 CDN');
       return false;
     }
 
@@ -2526,8 +2550,9 @@
         itemMaster = nextMaster;
         persistRecord(storagePrefix + 'itemMaster', itemMaster);
         showToast('已匯入 ' + Object.keys(itemMaster).length + ' 筆料位對照');
-      } catch {
-        showToast('藥品料位對照 Excel 無法讀取');
+      } catch (error) {
+        console.error('item master import failed', error);
+        showToast('藥品料位對照 Excel 無法讀取：' + (error?.message || '格式不符'));
       } finally {
         dom.masterExcelInput.value = '';
       }
@@ -2668,7 +2693,8 @@
         renderAll();
         showToast('已建立 ' + importedCabinets.length + ' 個' + areaName + '調劑台');
       } catch (error) {
-        showToast('調劑台儲位 Excel 無法讀取或格式不符');
+        console.error('dispensing import failed', error);
+        showToast('調劑台儲位 Excel 無法讀取：' + (error?.message || '格式不符'));
       } finally {
         dom.dispensingExcelInput.value = '';
       }
