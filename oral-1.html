@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>智慧藥櫃離線盤點</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --bg: #E9E9E7;
@@ -219,6 +220,14 @@
       flex-wrap: wrap;
       justify-content: flex-end;
       gap: 8px;
+    }
+
+    .cabinet-switch {
+      min-width: 170px;
+      min-height: 42px;
+      border-color: var(--line-strong);
+      background: #F8F8F6;
+      font-weight: 800;
     }
 
     .mobile-actions {
@@ -902,7 +911,7 @@
         position: absolute;
         right: 0;
         bottom: 64px;
-        width: 158px;
+        width: 206px;
         display: grid;
         grid-template-columns: 1fr;
         gap: 8px;
@@ -923,6 +932,14 @@
         background: #111111;
         border: 1px solid #111111;
         box-shadow: 0 10px 20px rgba(17, 17, 17, .12);
+        opacity: 0;
+        animation: menuItemIn .26s cubic-bezier(.2, .8, .2, 1) forwards;
+      }
+
+      .mobile-actions-panel select {
+        min-height: 44px;
+        border-radius: 999px;
+        background: #F8F8F6;
         opacity: 0;
         animation: menuItemIn .26s cubic-bezier(.2, .8, .2, 1) forwards;
       }
@@ -1454,6 +1471,7 @@
         <span class="save-lamp" aria-hidden="true"></span>
       </div>
       <div class="top-actions">
+        <select id="cabinetSelect" class="cabinet-switch" aria-label="切換調劑台"></select>
         <button id="exportCsvBtn" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
         <button id="shareCsvBtn" class="button-secondary" title="用手機分享盤點 CSV">分享 CSV</button>
         <button id="adminToggleBtn" class="button-secondary" title="切換後台設定">後台設定</button>
@@ -1463,6 +1481,7 @@
     <details class="mobile-actions">
       <summary aria-label="開啟功能選單"><span class="menu-icon" aria-hidden="true"></span></summary>
       <div class="mobile-actions-panel">
+        <select id="mobileCabinetSelect" class="cabinet-switch" aria-label="切換調劑台"></select>
         <button id="mobileExportCsvBtn" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
         <button id="mobileShareCsvBtn" class="button-secondary" title="用手機分享盤點 CSV">分享 CSV</button>
         <button id="mobileAdminToggleBtn" class="button-secondary" title="切換後台設定">後台設定</button>
@@ -1542,6 +1561,16 @@
             <div class="field">
               <label for="cabinetIdInput">藥櫃代碼</label>
               <input id="cabinetIdInput" autocomplete="off" placeholder="例如 oral-1">
+            </div>
+            <div class="field">
+              <label for="masterExcelInput">藥品料位對照 Excel</label>
+              <input id="masterExcelInput" type="file" accept=".xlsx,.xls">
+              <div class="field-help">匯入「藥局品項料位號.xlsx」，用料位號自動帶出藥品名稱。</div>
+            </div>
+            <div class="field">
+              <label for="dispensingExcelInput">調劑台儲位 Excel</label>
+              <input id="dispensingExcelInput" type="file" accept=".xlsx,.xls">
+              <div class="field-help">匯入 ER / OPDAC / OPDB / UD 儲位檔，會依 mark 視覺順序自動建立多個調劑台。</div>
             </div>
             <div class="field">
               <label for="locationSelect">編輯位置</label>
@@ -1664,6 +1693,8 @@
       { id: 'drawer-right-4', name: '右側抽屜 4' }
     ];
     let config = normalizeConfig(clone(defaultConfig));
+    let cabinetCollection = [];
+    let itemMaster = {};
     let currentLocationId = '';
     let activeDrugIndex = -1;
     let activeLocationId = '';
@@ -1687,6 +1718,8 @@
       missingDrugCount: $('#missingDrugCount'),
       workPanel: $('#workPanel'),
       closeDrugListBtn: $('#closeDrugListBtn'),
+      cabinetSelect: $('#cabinetSelect'),
+      mobileCabinetSelect: $('#mobileCabinetSelect'),
       exportCsvBtn: $('#exportCsvBtn'),
       shareCsvBtn: $('#shareCsvBtn'),
       mobileExportCsvBtn: $('#mobileExportCsvBtn'),
@@ -1697,6 +1730,8 @@
       adminCloseBtn: $('#adminCloseBtn'),
       cabinetNameInput: $('#cabinetNameInput'),
       cabinetIdInput: $('#cabinetIdInput'),
+      masterExcelInput: $('#masterExcelInput'),
+      dispensingExcelInput: $('#dispensingExcelInput'),
       locationSelect: $('#locationSelect'),
       drugNameInput: $('#drugNameInput'),
       slotNoInput: $('#slotNoInput'),
@@ -1844,6 +1879,32 @@
       }
     }
 
+    async function loadCollection() {
+      const dbCollection = await dbGet(storagePrefix + 'cabinetCollection').catch(() => null);
+      const legacyCollection = parseLegacyJson(legacyGet(storagePrefix + 'cabinetCollection'), null);
+      const saved = Array.isArray(dbCollection) ? dbCollection : legacyCollection;
+      if (Array.isArray(saved) && saved.length) {
+        return saved.map(normalizeConfig);
+      }
+      return [normalizeConfig(clone(defaultConfig))];
+    }
+
+    function saveCollection() {
+      const index = cabinetCollection.findIndex((cabinet) => cabinet.cabinetId === config.cabinetId);
+      if (index >= 0) {
+        cabinetCollection[index] = normalizeConfig(config);
+      } else {
+        cabinetCollection.push(normalizeConfig(config));
+      }
+      persistRecord(storagePrefix + 'cabinetCollection', cabinetCollection);
+    }
+
+    async function loadItemMaster() {
+      const dbMaster = await dbGet(storagePrefix + 'itemMaster').catch(() => null);
+      const legacyMaster = parseLegacyJson(legacyGet(storagePrefix + 'itemMaster'), null);
+      return dbMaster || legacyMaster || {};
+    }
+
     function normalizeConfig(nextConfig) {
       const allowedIds = new Set(fixedLocations.map((location) => location.id));
       const byId = new Map((Array.isArray(nextConfig.locations) ? nextConfig.locations : [])
@@ -1868,6 +1929,7 @@
     }
 
     function saveConfig() {
+      saveCollection();
       persistRecord(storagePrefix + 'config:' + config.cabinetId, config);
       persistRecord(storagePrefix + 'lastCabinetId', config.cabinetId);
       updateSaveStatus('位置設定已暫存');
@@ -1913,6 +1975,29 @@
 
     function getLocation(locationId) {
       return config.locations.find((location) => location.id === locationId);
+    }
+
+    function renderCabinetSelectors() {
+      const options = cabinetCollection.map((cabinet) => `
+        <option value="${escapeAttr(cabinet.cabinetId)}">${escapeHtml(cabinet.cabinetName)}</option>
+      `).join('');
+      dom.cabinetSelect.innerHTML = options;
+      dom.mobileCabinetSelect.innerHTML = options;
+      dom.cabinetSelect.value = config.cabinetId;
+      dom.mobileCabinetSelect.value = config.cabinetId;
+    }
+
+    async function switchCabinet(cabinetId) {
+      const nextConfig = cabinetCollection.find((cabinet) => cabinet.cabinetId === cabinetId);
+      if (!nextConfig || nextConfig.cabinetId === config.cabinetId) return;
+      saveCollection();
+      config = normalizeConfig(nextConfig);
+      currentLocationId = '';
+      closeDrugModal();
+      entries = await loadEntries(config.cabinetId);
+      persistRecord(storagePrefix + 'lastCabinetId', config.cabinetId);
+      renderAll();
+      showToast('已切換到 ' + config.cabinetName);
     }
 
     function entryKey(locationId, drugIndex) {
@@ -2276,11 +2361,14 @@
     }
 
     function createCsvExport() {
-      const rows = [['藥品名稱', '數量', '效期']];
+      const rows = [['調劑台', '位置', '料位號', '藥品名稱', '數量', '效期']];
       config.locations.forEach((location) => {
         location.items.forEach((item, index) => {
           const entry = entries[entryKey(location.id, index)] || {};
           rows.push([
+            config.cabinetName,
+            location.name,
+            item.slotNo || '',
             item.drugName,
             entry.notFound ? '找不到庫存' : (entry.quantity || ''),
             entry.notFound ? '' : (entry.expiryDate || '')
@@ -2386,6 +2474,204 @@
         dom.importConfigInput.value = '';
       };
       reader.readAsText(file, 'utf-8');
+    }
+
+    function ensureXlsxLibrary() {
+      if (window.XLSX) return true;
+      showToast('Excel 匯入元件尚未載入，請確認網路可連線後重新開啟網頁');
+      return false;
+    }
+
+    function readWorkbook(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return reject(new Error('no file'));
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            resolve(XLSX.read(reader.result, { type: 'array', cellFormula: true, cellDates: false }));
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = () => reject(reader.error || new Error('read failed'));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function sheetCell(sheet, row, col) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: row, c: col })];
+      if (!cell) return '';
+      return String(cell.v ?? '').trim();
+    }
+
+    function sheetFormula(sheet, row, col) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: row, c: col })];
+      return String(cell?.f || cell?.v || '').trim();
+    }
+
+    async function importItemMasterFile(file) {
+      if (!file || !ensureXlsxLibrary()) return;
+      try {
+        const workbook = await readWorkbook(file);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:C1');
+        const nextMaster = {};
+        for (let row = 1; row <= range.e.r; row++) {
+          const code = sheetCell(sheet, row, 0);
+          const slotNo = sheetCell(sheet, row, 1);
+          const drugName = sheetCell(sheet, row, 2);
+          if (!slotNo) continue;
+          nextMaster[slotNo] = { code, slotNo, drugName: drugName || ('料位號 ' + slotNo) };
+        }
+        itemMaster = nextMaster;
+        persistRecord(storagePrefix + 'itemMaster', itemMaster);
+        showToast('已匯入 ' + Object.keys(itemMaster).length + ' 筆料位對照');
+      } catch {
+        showToast('藥品料位對照 Excel 無法讀取');
+      } finally {
+        dom.masterExcelInput.value = '';
+      }
+    }
+
+    function inferAreaName(fileName) {
+      const upper = String(fileName || '').toUpperCase();
+      if (upper.includes('OPDAC')) return 'OPDAC';
+      if (upper.includes('OPDB')) return 'OPDB';
+      if (upper.includes('UD')) return 'UD';
+      if (upper.includes('ER')) return 'ER';
+      return '調劑台';
+    }
+
+    function inferToolLookupColumns(markSheet) {
+      const range = XLSX.utils.decode_range(markSheet['!ref'] || 'A1:A1');
+      for (let row = range.s.r; row <= Math.min(range.e.r, range.s.r + 4); row++) {
+        for (let col = range.s.c; col <= Math.min(range.e.c, range.s.c + 16); col++) {
+          const formula = sheetFormula(markSheet, row, col);
+          if (formula.includes('TOOL!$N:$O')) return { coordCol: 13, valueCol: 14 };
+          if (formula.includes('TOOL!$L:$M')) return { coordCol: 11, valueCol: 12 };
+        }
+      }
+      return { coordCol: 13, valueCol: 14 };
+    }
+
+    function visualBandStart(markCol) {
+      return 1 + Math.floor((markCol - 1) / 12) * 12;
+    }
+
+    function visualRowBand(markRow) {
+      return markRow >= 46 ? 46 : 1;
+    }
+
+    function classifyVisualLocation(markRow, markCol) {
+      const rowBand = visualRowBand(markRow);
+      const colBand = visualBandStart(markCol);
+      const shelfStart = rowBand === 46 ? 46 : 1;
+      const drawerStart = rowBand === 46 ? 52 : 7;
+      const rowOffset = markRow - shelfStart;
+      const colOffset = markCol - colBand;
+
+      if (rowOffset >= 1 && rowOffset <= 5 && colOffset >= 0 && colOffset <= 10) {
+        const shelfMap = rowOffset <= 2 ? 1 : rowOffset - 1;
+        return { cabinetKey: rowBand + ':' + colBand, locationId: 'shelf-' + shelfMap };
+      }
+
+      if (markRow >= drawerStart && markRow <= drawerStart + 31 && colOffset >= 0 && colOffset <= 5) {
+        const drawerNo = Math.floor((markRow - drawerStart) / 8) + 1;
+        const side = colOffset <= 2 ? 'left' : 'right';
+        return { cabinetKey: rowBand + ':' + colBand, locationId: 'drawer-' + side + '-' + drawerNo };
+      }
+
+      return null;
+    }
+
+    function fixedLocationClone() {
+      return fixedLocations.map((location) => ({ id: location.id, name: location.name, items: [] }));
+    }
+
+    function upsertLocationItem(locations, locationId, item) {
+      const location = locations.find((target) => target.id === locationId);
+      if (!location || !item.slotNo || item.slotNo === '0') return;
+      const key = item.slotNo + '|' + item.drugName;
+      if (location.items.some((existing) => (existing.slotNo + '|' + existing.drugName) === key)) return;
+      location.items.push(item);
+    }
+
+    function parseDispensingWorkbook(workbook, fileName) {
+      const toolSheet = workbook.Sheets.TOOL;
+      const markSheet = workbook.Sheets.mark;
+      if (!toolSheet || !markSheet) throw new Error('missing TOOL or mark sheet');
+      const areaName = inferAreaName(fileName);
+      const { coordCol, valueCol } = inferToolLookupColumns(markSheet);
+      const range = XLSX.utils.decode_range(toolSheet['!ref'] || 'A1:A1');
+      const cabinetMap = new Map();
+
+      for (let row = 1; row <= range.e.r; row++) {
+        const coord = sheetCell(toolSheet, row, coordCol);
+        const slotNo = sheetCell(toolSheet, row, valueCol);
+        if (!coord || !slotNo || slotNo === '0') continue;
+        let decoded;
+        try {
+          decoded = XLSX.utils.decode_cell(coord);
+        } catch {
+          continue;
+        }
+        const visual = classifyVisualLocation(decoded.r + 1, decoded.c + 1);
+        if (!visual) continue;
+        if (!cabinetMap.has(visual.cabinetKey)) {
+          const [rowBand, colBand] = visual.cabinetKey.split(':').map(Number);
+          cabinetMap.set(visual.cabinetKey, {
+            rowBand,
+            colBand,
+            locations: fixedLocationClone()
+          });
+        }
+        const masterItem = itemMaster[slotNo];
+        upsertLocationItem(cabinetMap.get(visual.cabinetKey).locations, visual.locationId, {
+          drugName: masterItem?.drugName || ('料位號 ' + slotNo),
+          slotNo
+        });
+      }
+
+      return [...cabinetMap.values()]
+        .filter((cabinet) => cabinet.locations.some((location) => location.items.length))
+        .sort((a, b) => (a.rowBand - b.rowBand) || (a.colBand - b.colBand))
+        .map((cabinet, index) => ({
+          cabinetId: areaName.toLowerCase() + '-' + (index + 1),
+          cabinetName: areaName + ' 調劑台 ' + (index + 1),
+          locations: cabinet.locations
+        }));
+    }
+
+    async function importDispensingFile(file) {
+      if (!file || !ensureXlsxLibrary()) return;
+      try {
+        if (!Object.keys(itemMaster).length) {
+          showToast('請先匯入藥品料位對照 Excel');
+          dom.dispensingExcelInput.value = '';
+          return;
+        }
+        const workbook = await readWorkbook(file);
+        const importedCabinets = parseDispensingWorkbook(workbook, file.name).map(normalizeConfig);
+        if (!importedCabinets.length) {
+          showToast('沒有從儲位檔讀到可建立的調劑台');
+          return;
+        }
+        const areaName = inferAreaName(file.name);
+        const areaPrefix = areaName.toLowerCase() + '-';
+        cabinetCollection = cabinetCollection
+          .filter((cabinet) => !String(cabinet.cabinetId).startsWith(areaPrefix))
+          .concat(importedCabinets);
+        config = importedCabinets[0];
+        currentLocationId = '';
+        entries = await loadEntries(config.cabinetId);
+        saveConfig();
+        renderAll();
+        showToast('已建立 ' + importedCabinets.length + ' 個' + areaName + '調劑台');
+      } catch (error) {
+        showToast('調劑台儲位 Excel 無法讀取或格式不符');
+      } finally {
+        dom.dispensingExcelInput.value = '';
+      }
     }
 
     function addDrugToLocation() {
@@ -2601,8 +2887,10 @@
     function resetDemo() {
       if (!confirm('確定要還原範例設定？目前位置設定會被覆蓋。')) return;
       config = clone(defaultConfig);
+      cabinetCollection = [normalizeConfig(config)];
       entries = {};
       currentLocationId = '';
+      persistRecord(storagePrefix + 'cabinetCollection', cabinetCollection);
       removeRecord(storagePrefix + 'config:' + config.cabinetId);
       removeRecord(storagePrefix + 'entries:' + config.cabinetId);
       persistRecord(storagePrefix + 'lastCabinetId', config.cabinetId);
@@ -2669,13 +2957,19 @@
 
     function renderAll() {
       dom.title.textContent = config.cabinetName + ' 盤點';
+      renderCabinetSelectors();
       renderCabinetArt();
       renderDrugStrip();
       renderAdmin();
     }
 
     async function initApp() {
-      config = await loadConfig();
+      itemMaster = await loadItemMaster();
+      cabinetCollection = await loadCollection();
+      const savedConfig = await loadConfig();
+      const matchedConfig = cabinetCollection.find((cabinet) => cabinet.cabinetId === savedConfig.cabinetId);
+      if (!matchedConfig && savedConfig) cabinetCollection.push(savedConfig);
+      config = normalizeConfig(matchedConfig || savedConfig || cabinetCollection[0] || defaultConfig);
       entries = await loadEntries(config.cabinetId);
       currentLocationId = '';
       renderAll();
@@ -2708,6 +3002,11 @@
       dom.mobileAdminToggleBtn.closest('details')?.removeAttribute('open');
     });
     dom.adminCloseBtn.addEventListener('click', closeAdminPanel);
+    dom.cabinetSelect.addEventListener('change', () => switchCabinet(dom.cabinetSelect.value));
+    dom.mobileCabinetSelect.addEventListener('change', () => {
+      switchCabinet(dom.mobileCabinetSelect.value);
+      dom.mobileCabinetSelect.closest('details')?.removeAttribute('open');
+    });
 
     dom.exportCsvBtn.addEventListener('click', exportCsv);
     dom.shareCsvBtn.addEventListener('click', shareCsv);
@@ -2722,6 +3021,8 @@
     dom.exportConfigBtn.addEventListener('click', exportConfig);
     dom.importConfigBtn.addEventListener('click', () => dom.importConfigInput.click());
     dom.importConfigInput.addEventListener('change', () => importConfigFromFile(dom.importConfigInput.files?.[0]));
+    dom.masterExcelInput.addEventListener('change', () => importItemMasterFile(dom.masterExcelInput.files?.[0]));
+    dom.dispensingExcelInput.addEventListener('change', () => importDispensingFile(dom.dispensingExcelInput.files?.[0]));
     dom.applyConfigBtn.addEventListener('click', applyConfigFromText);
     dom.resetDemoBtn.addEventListener('click', resetDemo);
     dom.downloadHtmlBtn.addEventListener('click', downloadStandaloneHtml);
