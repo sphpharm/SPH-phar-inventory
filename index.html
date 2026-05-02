@@ -163,6 +163,39 @@
       white-space: nowrap;
     }
 
+    .retro-clock {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 86px;
+      height: 32px;
+      padding: 0 12px;
+      color: #F0A64A;
+      background: #24231F;
+      border: 1px solid rgba(255, 255, 255, .48);
+      border-radius: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .11), inset 0 -8px 16px rgba(0, 0, 0, .24), 0 8px 18px rgba(17, 17, 17, .075);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 16px;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .08em;
+      line-height: 1;
+      text-shadow: 0 0 8px rgba(240, 166, 74, .36), 0 0 1px rgba(255, 230, 190, .86);
+    }
+
+    .clock-colon {
+      display: inline-block;
+      width: .58em;
+      text-align: center;
+      animation: clockColonPulse 1.4s steps(1, end) infinite;
+    }
+
+    @keyframes clockColonPulse {
+      0%, 48% { opacity: .95; }
+      49%, 100% { opacity: .28; }
+    }
+
     .cabinet-switcher {
       position: absolute;
       left: 50%;
@@ -387,16 +420,16 @@
       align-items: flex-start;
       gap: 10px;
       overflow-x: auto;
-      padding: 14px 20px 32px;
+      padding: 16px 20px 40px;
       scroll-padding-left: 20px;
       scroll-snap-type: x proximity;
-      min-height: 150px;
+      min-height: 182px;
       background: #E4E4E0;
     }
 
     .drug-card {
       flex: 0 0 min(250px, 78vw);
-      height: 148px;
+      height: 166px;
       min-height: 0;
       display: flex;
       flex-direction: column;
@@ -425,13 +458,46 @@
       box-shadow: 0 14px 30px rgba(137, 158, 141, .24), 0 8px 18px rgba(17, 17, 17, .075);
     }
 
-    .drug-card strong {
+    .drug-card.done .slot-badge {
+      color: #F4F4F2;
+      background: rgba(79, 100, 82, .82);
+      border-color: rgba(79, 100, 82, .18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+    }
+
+    .drug-title {
       display: -webkit-box;
-      line-height: 1.35;
+      line-height: 1.34;
       -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       overflow: hidden;
       overflow-wrap: anywhere;
+      font-weight: 780;
+    }
+
+    .drug-title strong {
+      display: inline;
+      font: inherit;
+      overflow-wrap: anywhere;
+    }
+
+    .slot-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 20px;
+      margin-right: 6px;
+      padding: 1px 7px;
+      color: #3E3D39;
+      background: #DEDED8;
+      border: 1px solid rgba(180, 178, 169, .72);
+      border-radius: 7px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .68);
+      font-size: 12px;
+      font-weight: 860;
+      line-height: 1.2;
+      white-space: nowrap;
+      vertical-align: 1px;
     }
 
     .drug-meta {
@@ -858,8 +924,17 @@
         white-space: nowrap;
       }
 
+      .retro-clock {
+        min-width: 72px;
+        height: 30px;
+        padding: 0 8px;
+        border-radius: 9px;
+        font-size: 14px;
+        letter-spacing: .06em;
+      }
+
       .cabinet-switcher {
-        width: min(238px, 58vw);
+        width: min(230px, 56vw);
       }
 
       .cabinet-switch {
@@ -1114,8 +1189,8 @@
       }
 
       .drug-strip {
-        min-height: 132px;
-        padding: 8px 22px 52px;
+        min-height: 166px;
+        padding: 12px 22px 58px;
         scroll-padding-left: 22px;
         gap: 10px;
         background: #E4E4E0;
@@ -1123,7 +1198,7 @@
 
       .drug-card {
         flex-basis: min(232px, 76vw);
-        height: 128px;
+        height: 150px;
         min-height: 0;
         padding: 13px;
         color: #302f2d;
@@ -1147,6 +1222,13 @@
         box-shadow: 0 18px 36px rgba(137, 158, 141, .36), 0 12px 26px rgba(17, 17, 17, .12);
       }
 
+      .drug-card.done .slot-badge {
+        color: rgba(244, 244, 242, .9);
+        background: rgba(17, 17, 17, .18);
+        border-color: rgba(17, 17, 17, .08);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+      }
+
       .drug-card.done .drug-meta {
         color: rgba(244, 244, 242, .78);
       }
@@ -1161,8 +1243,16 @@
         background: rgba(17, 17, 17, .28);
       }
 
-      .drug-card strong {
+      .drug-title {
         font-size: 14px;
+        -webkit-line-clamp: 3;
+      }
+
+      .slot-badge {
+        min-height: 19px;
+        padding: 1px 6px;
+        border-radius: 7px;
+        font-size: 11px;
       }
 
       .drug-meta {
@@ -19400,9 +19490,12 @@
 
   <div class="shell">
     <header class="topbar">
-      <div class="brand">
+      <div class="brand sr-only">
         <h1 id="cabinetTitle">智慧藥櫃盤點</h1>
         <span id="saveStatus">離線模式，資料會儲存在這台裝置</span>
+      </div>
+      <div class="retro-clock" aria-label="現在時間">
+        <span id="retroClockTime">--<span class="clock-colon">:</span>--</span>
       </div>
       <div class="cabinet-switcher">
         <select id="cabinetSelect" class="cabinet-switch" aria-label="切換調劑台"></select>
@@ -19422,8 +19515,8 @@
     <details class="mobile-actions">
       <summary aria-label="開啟功能選單"><span class="menu-icon" aria-hidden="true"></span></summary>
       <div class="mobile-actions-panel">
-        <button id="mobileExportCsvBtn" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
-        <button id="mobileShareCsvBtn" class="button-secondary" title="用手機分享盤點 CSV">分享 CSV</button>
+        <button id="mobileShareCsvBtn" title="用手機分享盤點 CSV">分享 CSV</button>
+        <button id="mobileExportCsvBtn" class="button-secondary" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
         <button id="mobileAdminToggleBtn" class="button-secondary" title="切換後台設定">後台設定</button>
       </div>
     </details>
@@ -19662,6 +19755,7 @@
       closeDrugListBtn: $('#closeDrugListBtn'),
       cabinetSelect: $('#cabinetSelect'),
       mobileCabinetSelect: $('#mobileCabinetSelect'),
+      retroClockTime: $('#retroClockTime'),
       exportCsvBtn: $('#exportCsvBtn'),
       shareCsvBtn: $('#shareCsvBtn'),
       mobileExportCsvBtn: $('#mobileExportCsvBtn'),
@@ -19983,6 +20077,14 @@
       }
     }
 
+    function updateRetroClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      dom.retroClockTime.innerHTML = hours + '<span class="clock-colon">:</span>' + minutes;
+      dom.retroClockTime.parentElement?.setAttribute('aria-label', '現在時間 ' + hours + ':' + minutes);
+    }
+
     async function switchCabinet(cabinetId) {
       const nextConfig = cabinetCollection.find((cabinet) => cabinet.cabinetId === cabinetId);
       if (!nextConfig || nextConfig.cabinetId === config.cabinetId) return;
@@ -20148,9 +20250,8 @@
           const statusText = notFound ? '找不到庫存' : (done ? '已完成' : '待輸入');
           return `
             <button class="drug-card ${done ? 'done' : ''}" data-drug-index="${index}">
-              <span>
-                <strong>${escapeHtml(item.drugName)}</strong>
-                <span class="drug-meta">料位號：${escapeHtml(item.slotNo || '未設定')}</span>
+              <span class="drug-title">
+                <span class="slot-badge">${escapeHtml(item.slotNo || '未設定')}</span><strong>${escapeHtml(item.drugName)}</strong>
               </span>
               <span class="drug-meta">
                 數量：${qty}<br>
@@ -21014,6 +21115,8 @@
     }
 
     async function initApp() {
+      updateRetroClock();
+      setInterval(updateRetroClock, 15000);
       itemMaster = await loadItemMaster();
       cabinetCollection = await loadCollection();
       const savedConfig = await loadConfig();
