@@ -799,6 +799,23 @@
       max-width: 100%;
     }
 
+    .modal input,
+    .modal select,
+    .modal textarea {
+      min-width: 0;
+      max-width: 100%;
+      inline-size: 100%;
+      min-inline-size: 0;
+    }
+
+    #expiryInput {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      min-inline-size: 0;
+    }
+
     .calc {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -860,6 +877,7 @@
 
     .calc-history-details {
       margin-top: 10px;
+      margin-bottom: 10px;
       background: #F7F7F5;
       border: 1px solid rgba(213, 213, 209, .9);
       border-radius: 14px;
@@ -1613,6 +1631,7 @@
 
       .calc-history-details {
         margin-top: 8px;
+        margin-bottom: 8px;
         flex: 0 0 auto;
       }
 
@@ -19842,6 +19861,13 @@
         </div>
         <div class="field quantity-field">
           <label for="qtyInput">數量</label>
+          <details id="calcHistoryDetails" class="calc-history-details">
+            <summary>
+              <span id="calcLatestLine" class="calc-latest">尚未加入明細</span>
+              <span class="calc-history-toggle">全部明細</span>
+            </summary>
+            <div id="calcHistoryList" class="calc-history" aria-label="數量計算明細"></div>
+          </details>
           <div class="qty-control">
             <input id="qtyInput" inputmode="none" autocomplete="off" readonly placeholder="使用下方按鍵輸入或加總">
             <button id="qtyBackBtn" class="qty-back" type="button" aria-label="刪除最後一個字">⌫</button>
@@ -19850,13 +19876,6 @@
             <span id="calcTotalLabel" class="calc-total">目前總量：0</span>
             <button id="calcAddLineBtn" class="calc-add-btn button-secondary" type="button">加入明細</button>
           </div>
-          <details id="calcHistoryDetails" class="calc-history-details">
-            <summary>
-              <span id="calcLatestLine" class="calc-latest">尚未加入明細</span>
-              <span class="calc-history-toggle">全部明細</span>
-            </summary>
-            <div id="calcHistoryList" class="calc-history" aria-label="數量計算明細"></div>
-          </details>
           <div class="calc" aria-label="數量加總計算機">
             <button data-key="7">7</button>
             <button data-key="8">8</button>
