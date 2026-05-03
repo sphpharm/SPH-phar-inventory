@@ -814,6 +814,27 @@
       min-width: 0;
       max-width: 100%;
       min-inline-size: 0;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    #expiryInput::-webkit-date-and-time-value {
+      min-width: 0;
+      text-align: left;
+    }
+
+    #expiryInput::-webkit-calendar-picker-indicator {
+      margin: 0;
+      padding: 0;
+    }
+
+    .expiry-control {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      border-radius: var(--radius);
     }
 
     .calc {
@@ -19857,7 +19878,9 @@
       <div class="modal-body">
         <div class="field">
           <label for="expiryInput">效期</label>
-          <input id="expiryInput" type="date">
+          <div class="expiry-control">
+            <input id="expiryInput" type="date">
+          </div>
         </div>
         <div class="field quantity-field">
           <label for="qtyInput">數量</label>
