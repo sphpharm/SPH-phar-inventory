@@ -376,6 +376,26 @@
       stroke: rgba(137, 158, 141, .82);
     }
 
+    .svg-progress {
+      pointer-events: none;
+    }
+
+    .svg-progress-frame {
+      fill: rgba(246, 246, 243, .78);
+      stroke: rgba(122, 120, 113, .62);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .svg-progress-seg {
+      fill: rgba(209, 207, 199, .46);
+    }
+
+    .svg-progress-seg.done {
+      fill: rgba(203, 139, 72, .78);
+      filter: drop-shadow(0 0 1px rgba(203, 139, 72, .18));
+    }
+
     .drawer-label,
     .shelf-label {
       pointer-events: none;
@@ -20398,7 +20418,12 @@
           height: 68,
           textX: 160,
           textY: hitY + 30,
-          className: 'shelf-label'
+          className: 'shelf-label',
+          progressX: 442,
+          progressY: hitY + 22,
+          progressWidth: 112,
+          progressHeight: 9,
+          progressSegments: 18
         });
       });
 
@@ -20434,7 +20459,12 @@
           height: drawer.height - 8,
           textX: drawer.x + 12,
           textY: drawer.y + 28,
-          className: 'drawer-label'
+          className: 'drawer-label',
+          progressX: drawer.x + 118,
+          progressY: drawer.y + 20,
+          progressWidth: 76,
+          progressHeight: 8,
+          progressSegments: 12
         });
       });
     }
@@ -20450,8 +20480,10 @@
     }
 
     function addHitArea(area) {
-      const done = isLocationDone(getLocation(area.id) || { items: [] });
+      const location = getLocation(area.id) || { items: [] };
+      const done = isLocationDone(location);
       const active = currentLocationId === area.id;
+      const progress = locationProgress(location);
       dom.hitAreas.insertAdjacentHTML('beforeend', `
         <g>
           <rect
@@ -20464,8 +20496,44 @@
             rx="5"
           ></rect>
           <text class="${area.className}" x="${area.textX}" y="${area.textY}">${area.label}</text>
+          ${progressBarSvg({
+            x: area.progressX,
+            y: area.progressY,
+            width: area.progressWidth,
+            height: area.progressHeight,
+            segments: area.progressSegments,
+            ratio: progress.ratio
+          })}
         </g>
       `);
+    }
+
+    function locationProgress(location) {
+      const total = Array.isArray(location.items) ? location.items.length : 0;
+      const done = total
+        ? location.items.filter((_, index) => isEntryDone(location.id, index)).length
+        : 0;
+      return { total, done, ratio: total ? done / total : 0 };
+    }
+
+    function progressBarSvg({ x, y, width, height, segments, ratio }) {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) || !Number.isFinite(height)) return '';
+      const gap = 2;
+      const innerPad = 3;
+      const usableWidth = width - (innerPad * 2);
+      const segmentWidth = Math.max(2, (usableWidth - gap * (segments - 1)) / segments);
+      const fillCount = Math.round(Math.max(0, Math.min(1, ratio)) * segments);
+      const rects = Array.from({ length: segments }, (_, index) => {
+        const segX = x + innerPad + index * (segmentWidth + gap);
+        const doneClass = index < fillCount ? ' done' : '';
+        return `<rect class="svg-progress-seg${doneClass}" x="${segX.toFixed(2)}" y="${(y + 2).toFixed(2)}" width="${segmentWidth.toFixed(2)}" height="${(height - 4).toFixed(2)}" rx="0.6"></rect>`;
+      }).join('');
+      return `
+        <g class="svg-progress">
+          <rect class="svg-progress-frame" x="${x}" y="${y}" width="${width}" height="${height}" rx="1.5"></rect>
+          ${rects}
+        </g>
+      `;
     }
 
     function renderLocationList() {
