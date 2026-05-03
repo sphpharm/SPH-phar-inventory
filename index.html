@@ -725,11 +725,22 @@
     .modal {
       width: min(560px, 100%);
       max-height: min(760px, calc(100vh - 32px));
-      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       background: #EDEDEA;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       pointer-events: auto;
+      overscroll-behavior: contain;
+      -webkit-user-drag: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .modal * {
+      max-width: 100%;
+      -webkit-user-drag: none;
     }
 
     .modal-backdrop.show .modal {
@@ -775,6 +786,17 @@
     .modal-body {
       padding: 16px;
       background: #EDEDEA;
+      overflow: hidden;
+    }
+
+    .quantity-field {
+      min-height: 0;
+    }
+
+    .modal-body .field,
+    .qty-control {
+      min-width: 0;
+      max-width: 100%;
     }
 
     .calc {
@@ -830,7 +852,55 @@
     .calc-history {
       display: grid;
       gap: 7px;
+      max-height: 136px;
+      overflow-y: auto;
+      padding: 0 8px 8px;
+      overscroll-behavior: contain;
+    }
+
+    .calc-history-details {
       margin-top: 10px;
+      background: #F7F7F5;
+      border: 1px solid rgba(213, 213, 209, .9);
+      border-radius: 14px;
+      box-shadow: 0 6px 14px rgba(17, 17, 17, .045);
+      overflow: hidden;
+    }
+
+    .calc-history-details summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 8px 9px 8px 11px;
+      color: #3F3E3A;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .calc-history-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .calc-latest {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 720;
+    }
+
+    .calc-history-toggle {
+      min-height: 28px;
+      padding: 4px 9px;
+      color: #4D4D49;
+      background: #E6E6E2;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 760;
     }
 
     .calc-line {
@@ -1391,13 +1461,14 @@
 
       .modal {
         width: 100%;
-        max-height: 82dvh;
+        max-height: 92dvh;
         border-radius: 26px 26px 0 0;
         border: 1px solid rgba(222, 222, 218, .86);
         border-bottom: 0;
         background: rgba(244, 244, 242, .97);
         box-shadow: 0 -20px 48px rgba(17, 17, 17, .16);
         backdrop-filter: blur(14px);
+        overflow: hidden;
       }
 
       .modal-backdrop.show .modal {
@@ -1438,12 +1509,22 @@
       }
 
       .modal-body {
-        padding: 12px 18px 14px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        padding: 12px 14px 12px;
+        overflow: hidden;
       }
 
       .field {
         margin-bottom: 10px;
         gap: 6px;
+      }
+
+      .quantity-field {
+        flex: 1 1 auto;
+        min-height: 0;
+        margin-bottom: 0;
       }
 
       input,
@@ -1458,8 +1539,9 @@
 
       .calc {
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 9px;
-        padding: 10px;
+        gap: 7px;
+        margin-top: auto;
+        padding: 8px;
         background: #E6E6E2;
         border: 1px solid #D5D5D1;
         border-radius: 20px;
@@ -1467,14 +1549,14 @@
       }
 
       .calc button {
-        min-height: 50px;
+        min-height: 44px;
         padding: 0;
         border-color: #D9D9D6;
-        border-radius: 17px;
+        border-radius: 15px;
         color: #111111;
         background: #F8F8F6;
         box-shadow: 0 5px 12px rgba(17, 17, 17, .075);
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 680;
       }
 
@@ -1524,9 +1606,14 @@
       }
 
       .calc-history {
-        max-height: 118px;
+        max-height: 98px;
         overflow-y: auto;
         padding-right: 2px;
+      }
+
+      .calc-history-details {
+        margin-top: 8px;
+        flex: 0 0 auto;
       }
 
       .modal-footer {
@@ -19750,11 +19837,26 @@
       </div>
       <div class="modal-body">
         <div class="field">
+          <label for="expiryInput">效期</label>
+          <input id="expiryInput" type="date">
+        </div>
+        <div class="field quantity-field">
           <label for="qtyInput">數量</label>
           <div class="qty-control">
             <input id="qtyInput" inputmode="none" autocomplete="off" readonly placeholder="使用下方按鍵輸入或加總">
             <button id="qtyBackBtn" class="qty-back" type="button" aria-label="刪除最後一個字">⌫</button>
           </div>
+          <div class="calc-actions">
+            <span id="calcTotalLabel" class="calc-total">目前總量：0</span>
+            <button id="calcAddLineBtn" class="calc-add-btn button-secondary" type="button">加入明細</button>
+          </div>
+          <details id="calcHistoryDetails" class="calc-history-details">
+            <summary>
+              <span id="calcLatestLine" class="calc-latest">尚未加入明細</span>
+              <span class="calc-history-toggle">全部明細</span>
+            </summary>
+            <div id="calcHistoryList" class="calc-history" aria-label="數量計算明細"></div>
+          </details>
           <div class="calc" aria-label="數量加總計算機">
             <button data-key="7">7</button>
             <button data-key="8">8</button>
@@ -19773,15 +19875,6 @@
             <button data-key="clear" class="op">C</button>
             <button data-key="=" class="op">=</button>
           </div>
-          <div class="calc-actions">
-            <span id="calcTotalLabel" class="calc-total">目前總量：0</span>
-            <button id="calcAddLineBtn" class="calc-add-btn button-secondary" type="button">加入明細</button>
-          </div>
-          <div id="calcHistoryList" class="calc-history" aria-label="數量計算明細"></div>
-        </div>
-        <div class="field">
-          <label for="expiryInput">效期</label>
-          <input id="expiryInput" type="date">
         </div>
       </div>
       <div class="modal-footer">
@@ -19884,6 +19977,8 @@
       qtyBackBtn: $('#qtyBackBtn'),
       calcAddLineBtn: $('#calcAddLineBtn'),
       calcTotalLabel: $('#calcTotalLabel'),
+      calcLatestLine: $('#calcLatestLine'),
+      calcHistoryDetails: $('#calcHistoryDetails'),
       calcHistoryList: $('#calcHistoryList'),
       expiryInput: $('#expiryInput'),
       notFoundBtn: $('#notFoundBtn'),
@@ -20437,6 +20532,7 @@
       dom.qtyInput.value = entry.notFound ? '' : (entry.quantity || '');
       calcStartsNewDraft = activeCalcLines.length > 0;
       dom.expiryInput.value = entry.notFound ? '' : (entry.expiryDate || '');
+      dom.calcHistoryDetails.open = false;
       renderCalcHistory();
       document.body.classList.add('modal-open');
       dom.modal.classList.add('show');
@@ -20591,7 +20687,11 @@
 
     function renderCalcHistory() {
       const total = calcLinesTotal(activeCalcLines);
+      const latest = activeCalcLines[activeCalcLines.length - 1];
       dom.calcTotalLabel.textContent = '目前總量：' + trimNumber(total);
+      dom.calcLatestLine.textContent = latest
+        ? '最新：' + latest.expression + ' = ' + trimNumber(latest.total)
+        : '尚未加入明細';
       dom.calcHistoryList.innerHTML = activeCalcLines.length
         ? activeCalcLines.map((line, index) => `
           <div class="calc-line">
@@ -20599,7 +20699,7 @@
             <button class="calc-line-delete" type="button" data-calc-line-index="${index}" aria-label="刪除此筆計算明細">×</button>
           </div>
         `).join('')
-        : '<div class="calc-line"><span class="calc-line-text">尚未加入明細，可直接輸入總量，或用乘法算完後按加入明細。</span></div>';
+        : '<div class="calc-line"><span class="calc-line-text">可直接輸入總量，或用乘法算完後按加入明細。</span></div>';
     }
 
     function addCalcLine() {
@@ -21437,6 +21537,9 @@
     dom.closeModalBtn.addEventListener('click', closeDrugModal);
     dom.modal.addEventListener('click', (event) => {
       if (event.target === dom.modal) closeDrugModal();
+    });
+    dom.modal.addEventListener('dragstart', (event) => {
+      event.preventDefault();
     });
     dom.saveEntryBtn.addEventListener('click', saveDrugEntry);
     dom.deleteEntryBtn.addEventListener('click', deleteDrugEntry);
