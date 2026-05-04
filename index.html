@@ -15,7 +15,7 @@
       --line-strong: #C6C6C1;
       --blue: #111111;
       --blue-dark: #000000;
-      --green: #9FAF9F;
+      --green: #6B5546;
       --amber: #b7791f;
       --red: #c2413a;
       --shadow: 0 18px 44px rgba(39, 36, 30, .12);
@@ -372,8 +372,8 @@
     }
 
     .hit-area.done {
-      fill: rgba(159, 175, 159, .42);
-      stroke: rgba(137, 158, 141, .82);
+      fill: rgba(107, 85, 70, .22);
+      stroke: rgba(194, 125, 61, .78);
     }
 
     .svg-progress {
@@ -457,6 +457,7 @@
       flex: 0 0 min(250px, 78vw);
       height: 166px;
       min-height: 0;
+      position: relative;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -479,16 +480,87 @@
     }
 
     .drug-card.done {
-      border-color: rgba(137, 158, 141, .84);
-      background: #f2f4f0;
-      box-shadow: 0 14px 30px rgba(137, 158, 141, .24), 0 8px 18px rgba(17, 17, 17, .075);
+      padding-right: 44px;
+      border-color: rgba(194, 125, 61, .78);
+      background: #6B5546;
+      color: #F7F1EA;
+      box-shadow: 0 14px 30px rgba(82, 58, 42, .20), 0 8px 18px rgba(17, 17, 17, .075);
+    }
+
+    .drug-card.done::after {
+      content: "✓";
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      color: #F7F1EA;
+      background: rgba(207, 132, 56, .92);
+      border: 1px solid rgba(255, 219, 174, .28);
+      border-radius: 999px;
+      box-shadow: 0 7px 16px rgba(207, 132, 56, .22);
+      font-size: 16px;
+      font-weight: 860;
+      transform: translateY(-50%);
     }
 
     .drug-card.done .slot-badge {
-      color: #F4F4F2;
-      background: rgba(79, 100, 82, .82);
-      border-color: rgba(79, 100, 82, .18);
+      color: #FFF5EA;
+      background: rgba(207, 132, 56, .74);
+      border-color: rgba(255, 219, 174, .22);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+    }
+
+    .drug-card.done .drug-meta {
+      color: rgba(247, 241, 234, .76);
+    }
+
+    .drug-card.done .status-pill {
+      color: #2E2119;
+      background: rgba(235, 166, 83, .94);
+    }
+
+    .drug-card.done .status-pill.not-found {
+      color: #F7F1EA;
+      background: rgba(38, 29, 23, .48);
+    }
+
+    .add-drug-card {
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #5A5149;
+      background: rgba(247, 247, 245, .70);
+      border: 1px dashed rgba(122, 120, 113, .42);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .78), 0 10px 22px rgba(17, 17, 17, .055);
+    }
+
+    .add-drug-card:hover {
+      color: #2F2924;
+      background: #F8F8F6;
+      border-color: rgba(203, 139, 72, .64);
+    }
+
+    .add-drug-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      color: #F7F1EA;
+      background: #A36A39;
+      border-radius: 999px;
+      box-shadow: 0 10px 22px rgba(163, 106, 57, .20);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .add-drug-card span:last-child {
+      font-size: 13px;
+      font-weight: 780;
     }
 
     .drug-title {
@@ -723,8 +795,8 @@
     }
 
     .status-pill.done {
-      color: #111111;
-      background: #9FAF9F;
+      color: #2E2119;
+      background: #D08B43;
     }
 
     .status-pill.not-found {
@@ -841,18 +913,9 @@
       max-width: 100%;
       min-inline-size: 0;
       box-sizing: border-box;
+      font-variant-numeric: tabular-nums;
       -webkit-appearance: none;
       appearance: none;
-    }
-
-    #expiryInput::-webkit-date-and-time-value {
-      min-width: 0;
-      text-align: left;
-    }
-
-    #expiryInput::-webkit-calendar-picker-indicator {
-      margin: 0;
-      padding: 0;
     }
 
     .expiry-control {
@@ -1012,6 +1075,10 @@
       border-radius: 0 0 var(--radius) var(--radius);
     }
 
+    .temp-drug-modal {
+      width: min(430px, 100%);
+    }
+
     .not-found-btn {
       display: inline-flex;
       align-items: center;
@@ -1061,6 +1128,519 @@
       opacity: 1;
       visibility: visible;
     }
+
+    .search-dock {
+      position: fixed;
+      left: 14px;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      z-index: 19;
+      --search-prime-width: min(320px, calc(100vw - 28px));
+      --search-caret-run: clamp(180px, calc(100vw - 104px), 252px);
+      display: grid;
+      align-items: end;
+      justify-items: start;
+      pointer-events: none;
+    }
+
+    .search-toggle,
+    .search-panel {
+      pointer-events: auto;
+    }
+
+    .search-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      min-height: 56px;
+      padding: 0;
+      color: #2F2924;
+      background: rgba(255, 255, 255, .82);
+      border: 1px solid rgba(255, 255, 255, .92);
+      border-radius: 999px;
+      box-shadow: 0 18px 34px rgba(39, 36, 30, .14), inset 0 0 0 1px rgba(211, 205, 195, .36);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      position: relative;
+      transition: opacity .18s ease, transform .22s cubic-bezier(.2, .9, .2, 1);
+    }
+
+    .search-toggle::after {
+      content: "搜尋藥名或料位號";
+      position: absolute;
+      left: 54px;
+      right: 20px;
+      top: 50%;
+      color: #777067;
+      font-size: 14px;
+      font-weight: 680;
+      text-align: left;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(-50%) translateX(-8px);
+      pointer-events: none;
+    }
+
+    .search-dock.is-open .search-toggle {
+      opacity: 0;
+      transform: translateY(8px) scale(.92);
+      pointer-events: none;
+    }
+
+    .search-dock.is-priming .search-toggle {
+      opacity: 0;
+      transform: scale(.92);
+      pointer-events: none;
+    }
+
+    .search-icon {
+      position: relative;
+      width: 22px;
+      height: 22px;
+      flex: 0 0 22px;
+      display: block;
+      border: 0;
+    }
+
+    .search-toggle .search-icon {
+      position: absolute;
+      left: 17px;
+      top: 17px;
+    }
+
+    .search-icon::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 13px;
+      height: 13px;
+      border: 2px solid currentColor;
+      border-radius: 999px;
+    }
+
+    .search-icon::after {
+      content: "";
+      position: absolute;
+      left: 15px;
+      top: 16px;
+      width: 8px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 999px;
+      transform: rotate(45deg);
+      transform-origin: left center;
+    }
+
+    .search-panel {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: var(--search-prime-width);
+      max-width: calc(100vw - 28px);
+      max-height: 56px;
+      padding: 0;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      box-shadow: none;
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(0) scale(1);
+      transform-origin: bottom left;
+      transition:
+        opacity .22s ease,
+        visibility .22s ease,
+        transform .34s cubic-bezier(.2, .9, .2, 1),
+        max-height .36s cubic-bezier(.2, .9, .2, 1),
+        padding .30s cubic-bezier(.2, .9, .2, 1),
+        background-color .22s ease,
+        border-color .22s ease,
+        border-radius .30s cubic-bezier(.2, .9, .2, 1),
+        box-shadow .22s ease;
+    }
+
+    .search-dock.is-priming .search-panel {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: none;
+    }
+
+    .search-dock.is-open .search-panel {
+      max-height: min(500px, calc(100dvh - 92px));
+      padding: 10px;
+      background: rgba(244, 244, 242, .96);
+      border-color: rgba(220, 220, 216, .86);
+      border-radius: 22px;
+      box-shadow: 0 20px 42px rgba(17, 17, 17, .16);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .search-form {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      width: 56px;
+      height: 56px;
+      min-height: 56px;
+      padding: 0;
+      background: rgba(255, 255, 255, .82);
+      border: 1px solid rgba(255, 255, 255, .92);
+      border-radius: 999px;
+      box-shadow: 0 18px 34px rgba(39, 36, 30, .14), inset 0 0 0 1px rgba(211, 205, 195, .36);
+      overflow: hidden;
+      position: relative;
+      transition:
+        width .26s cubic-bezier(.2, .9, .2, 1),
+        height .22s cubic-bezier(.2, .9, .2, 1),
+        padding .22s ease,
+        background-color .20s ease,
+        border-color .20s ease,
+        box-shadow .20s ease;
+    }
+
+    .search-dock.is-priming .search-form {
+      animation: searchFormPrime .86s cubic-bezier(.2, .9, .2, 1) both;
+    }
+
+    .search-dock.is-open .search-form {
+      justify-content: flex-start;
+      gap: 8px;
+      width: 100%;
+      height: 48px;
+      min-height: 48px;
+      padding: 4px 5px 4px 15px;
+      background: #FFFFFF;
+      border-color: #D5D5D1;
+      box-shadow: inset 0 1px 2px rgba(17, 17, 17, .035);
+    }
+
+    .search-form::after {
+      content: "搜尋藥名或料位號";
+      position: absolute;
+      left: 54px;
+      right: 20px;
+      top: 50%;
+      color: #777067;
+      font-size: 14px;
+      font-weight: 680;
+      text-align: left;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(-50%) translateX(-8px);
+      pointer-events: none;
+    }
+
+    .search-dock.is-priming .search-form::after {
+      animation: searchPlaceholderPrime .86s ease both;
+    }
+
+    .search-form .search-icon {
+      position: absolute;
+      left: 17px;
+      top: 17px;
+      display: block;
+    }
+
+    .search-dock.is-priming .search-form .search-icon::before {
+      animation: searchRingPrime .86s ease both;
+    }
+
+    .search-dock.is-priming .search-form .search-icon::after {
+      animation: searchHandlePrime .86s linear both;
+    }
+
+    .search-dock.is-open .search-form .search-icon,
+    .search-dock.is-open .search-form::after {
+      display: none;
+    }
+
+    .search-form input {
+      flex: 1 1 auto;
+      width: 0;
+      min-width: 0;
+      min-height: 38px;
+      padding: 6px 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      outline: none;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .search-dock.is-open .search-form input {
+      width: 100%;
+      padding: 6px 4px 6px 0;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .search-close-btn {
+      width: 38px;
+      min-width: 38px;
+      flex: 0 0 38px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      color: #F7F1EA;
+      background: #A36A39;
+      border-radius: 999px;
+      font-size: 20px;
+      line-height: 1;
+      position: relative;
+      opacity: 0;
+      pointer-events: none;
+      transition: background .2s ease, color .2s ease, transform .12s ease;
+    }
+
+    .search-dock.is-open .search-close-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .search-close-btn::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      width: 14px;
+      height: 14px;
+      border: 2px solid currentColor;
+      border-radius: 999px;
+      opacity: 0;
+    }
+
+    .search-close-btn::after {
+      content: "";
+      position: absolute;
+      left: 23px;
+      top: 25px;
+      width: 9px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 999px;
+      transform: rotate(45deg);
+      opacity: 0;
+    }
+
+    .search-close-mark {
+      position: relative;
+      z-index: 1;
+      display: block;
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+
+    .search-scope {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-top: 9px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s ease .30s, transform .25s cubic-bezier(.16, 1, .3, 1) .30s;
+    }
+
+    .search-dock.is-open .search-scope {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .search-scope label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 5px 8px;
+      color: #5A5149;
+      background: #F8F8F6;
+      border: 1px solid #D5D5D1;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .search-scope input {
+      width: auto;
+      min-height: auto;
+      accent-color: #A36A39;
+    }
+
+    .search-results {
+      display: grid;
+      gap: 7px;
+      max-height: min(290px, 44dvh);
+      margin-top: 9px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s ease .36s, transform .25s cubic-bezier(.16, 1, .3, 1) .36s;
+    }
+
+    .search-dock.is-open .search-results {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .search-result {
+      display: grid;
+      gap: 3px;
+      min-height: 54px;
+      padding: 9px 11px;
+      color: #332C26;
+      background: #F8F8F6;
+      border: 1px solid rgba(213, 213, 209, .92);
+      border-radius: 14px;
+      box-shadow: 0 7px 16px rgba(17, 17, 17, .05);
+      text-align: left;
+    }
+
+    .search-result strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    .search-result span {
+      color: #777067;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .search-empty {
+      padding: 12px 10px;
+      color: #777067;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @keyframes searchFormPrime {
+      0% {
+        width: 56px;
+        height: 56px;
+        background: rgba(255, 255, 255, .82);
+        border-color: rgba(255, 255, 255, .92);
+        border-radius: 999px;
+        box-shadow: 0 18px 34px rgba(39, 36, 30, .14), inset 0 0 0 1px rgba(211, 205, 195, .36);
+      }
+      30% {
+        width: 56px;
+        height: 56px;
+        background: rgba(255, 255, 255, .82);
+        border-color: rgba(255, 255, 255, .92);
+        border-radius: 999px;
+        box-shadow: 0 18px 34px rgba(39, 36, 30, .14), inset 0 0 0 1px rgba(211, 205, 195, .36);
+      }
+      58% {
+        width: var(--search-prime-width);
+        height: 52px;
+        background: rgba(255, 255, 255, .94);
+        border-color: rgba(213, 213, 209, .96);
+        border-radius: 999px;
+        box-shadow: 0 18px 34px rgba(39, 36, 30, .12), inset 0 1px 2px rgba(17, 17, 17, .035);
+      }
+      100% {
+        width: var(--search-prime-width);
+        height: 52px;
+        background: rgba(255, 255, 255, .94);
+        border-color: rgba(213, 213, 209, .96);
+        border-radius: 999px;
+        box-shadow: 0 18px 34px rgba(39, 36, 30, .12), inset 0 1px 2px rgba(17, 17, 17, .035);
+      }
+    }
+
+    @keyframes searchPlaceholderPrime {
+      0%, 36% {
+        opacity: 0;
+        transform: translateY(-50%) translateX(-8px);
+      }
+      58%, 82% {
+        opacity: .78;
+        transform: translateY(-50%) translateX(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-50%) translateX(0);
+      }
+    }
+
+    @keyframes searchRingPrime {
+      0%, 36% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      52% {
+        opacity: .85;
+        transform: scale(.72);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(.72);
+      }
+    }
+
+    @keyframes searchHandlePrime {
+      0% {
+        left: 15px;
+        top: 16px;
+        width: 8px;
+        height: 2px;
+        background: currentColor;
+        transform: rotate(45deg);
+        opacity: 1;
+      }
+      24% {
+        left: 13px;
+        top: 18px;
+        width: 8px;
+        height: 2px;
+        background: currentColor;
+        transform: rotate(-180deg);
+        opacity: 1;
+      }
+      48%, 62% {
+        left: 18px;
+        top: 4px;
+        width: 2px;
+        height: 18px;
+        background: #A36A39;
+        transform: translateX(var(--search-caret-run)) rotate(-180deg) translateY(7px);
+        opacity: 1;
+      }
+      78% {
+        left: 18px;
+        top: 4px;
+        width: 2px;
+        height: 18px;
+        background: #A36A39;
+        transform: translateX(var(--search-caret-run)) rotate(-180deg) translateY(-1px);
+        opacity: .9;
+      }
+      100% {
+        left: 18px;
+        top: 4px;
+        width: 2px;
+        height: 18px;
+        background: #A36A39;
+        transform: translateX(var(--search-caret-run)) rotate(-180deg) translateY(-12px);
+        opacity: 0;
+      }
+    }
+
 
     .sr-only {
       position: absolute;
@@ -1429,31 +2009,32 @@
       }
 
       .drug-card.done {
-        border-color: rgba(137, 158, 141, .84);
-        background: #9FAF9F;
-        color: #F4F4F2;
-        box-shadow: 0 18px 36px rgba(137, 158, 141, .36), 0 12px 26px rgba(17, 17, 17, .12);
+        padding-right: 42px;
+        border-color: rgba(194, 125, 61, .82);
+        background: #6B5546;
+        color: #F7F1EA;
+        box-shadow: 0 18px 36px rgba(82, 58, 42, .28), 0 12px 26px rgba(17, 17, 17, .12);
       }
 
       .drug-card.done .slot-badge {
-        color: rgba(244, 244, 242, .9);
-        background: rgba(17, 17, 17, .18);
-        border-color: rgba(17, 17, 17, .08);
+        color: #FFF5EA;
+        background: rgba(207, 132, 56, .74);
+        border-color: rgba(255, 219, 174, .22);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
       }
 
       .drug-card.done .drug-meta {
-        color: rgba(244, 244, 242, .78);
+        color: rgba(247, 241, 234, .76);
       }
 
       .drug-card.done .status-pill {
-        color: #F4F4F2;
-        background: rgba(17, 17, 17, .18);
+        color: #2E2119;
+        background: rgba(235, 166, 83, .94);
       }
 
       .drug-card.done .status-pill.not-found {
-        color: #F4F4F2;
-        background: rgba(17, 17, 17, .28);
+        color: #F7F1EA;
+        background: rgba(38, 29, 23, .48);
       }
 
       .drug-title {
@@ -1482,8 +2063,8 @@
       }
 
       .status-pill.done {
-        color: #111111;
-        background: rgba(159, 175, 159, .94);
+        color: #2E2119;
+        background: rgba(208, 139, 67, .94);
       }
 
       .status-pill.not-found {
@@ -19928,7 +20509,7 @@
         <div class="field">
           <label for="expiryInput">效期</label>
           <div class="expiry-control">
-            <input id="expiryInput" type="date">
+            <input id="expiryInput" type="text" inputmode="numeric" pattern="[0-9/]*" maxlength="8" autocomplete="off" enterkeyhint="done" placeholder="YY/MM/DD">
           </div>
         </div>
         <div class="field quantity-field">
@@ -19979,7 +20560,53 @@
     </div>
   </div>
 
+  <div id="tempDrugModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tempDrugTitle">
+    <div class="modal temp-drug-modal">
+      <div class="modal-header">
+        <div>
+          <h3 id="tempDrugTitle">新增臨時藥品</h3>
+          <p id="tempDrugMeta">加入後可照一般藥品輸入數量與效期。</p>
+        </div>
+        <button id="tempDrugCloseBtn" class="icon-action-btn" aria-label="關閉新增臨時藥品" title="關閉">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="tempSlotInput">料位號</label>
+          <input id="tempSlotInput" autocomplete="off" placeholder="例如 TEMP-01">
+        </div>
+        <div class="field">
+          <label for="tempDrugNameInput">藥品名稱</label>
+          <input id="tempDrugNameInput" autocomplete="off" placeholder="輸入臨時要盤點的藥品">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="tempDrugCancelBtn" class="button-secondary" type="button">取消</button>
+        <button id="tempDrugAddBtn" type="button">加入並盤點</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div id="searchDock" class="search-dock">
+    <button id="searchToggleBtn" class="search-toggle" type="button" aria-label="搜尋藥品位置" aria-expanded="false">
+      <span class="search-icon" aria-hidden="true"></span>
+    </button>
+    <div class="search-panel" role="search">
+      <div class="search-form">
+        <span class="search-icon" aria-hidden="true"></span>
+        <input id="drugSearchInput" type="search" autocomplete="off" placeholder="搜尋藥名或料位號">
+        <button id="searchCloseBtn" class="search-close-btn" type="button" aria-label="搜尋藥品位置" aria-expanded="false">
+          <span class="search-close-mark" aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="search-scope" role="radiogroup" aria-label="搜尋範圍">
+        <label><input type="radio" name="searchScope" value="current" checked>目前台</label>
+        <label><input type="radio" name="searchScope" value="all">全部台</label>
+      </div>
+      <div id="searchResults" class="search-results" aria-live="polite"></div>
+    </div>
+  </div>
 
   <script>
     const defaultConfig = JSON.parse(document.getElementById('cabinet-config').textContent);
@@ -19998,7 +20625,8 @@
       { id: 'drawer-right-1', name: '右側抽屜 1' },
       { id: 'drawer-right-2', name: '右側抽屜 2' },
       { id: 'drawer-right-3', name: '右側抽屜 3' },
-      { id: 'drawer-right-4', name: '右側抽屜 4' }
+      { id: 'drawer-right-4', name: '右側抽屜 4' },
+      { id: 'temporary', name: '臨時藥品' }
     ];
     let config = normalizeConfig(clone(defaultConfig));
     let cabinetCollection = [];
@@ -20008,6 +20636,8 @@
     let activeLocationId = '';
     let activeCalcLines = [];
     let calcStartsNewDraft = false;
+    let tempDrugTargetLocationId = '';
+    let searchMatches = [];
     let entries = {};
 
     const $ = (selector) => document.querySelector(selector);
@@ -20028,6 +20658,11 @@
       missingDrugCount: $('#missingDrugCount'),
       workPanel: $('#workPanel'),
       closeDrugListBtn: $('#closeDrugListBtn'),
+      searchDock: $('#searchDock'),
+      searchToggleBtn: $('#searchToggleBtn'),
+      searchCloseBtn: $('#searchCloseBtn'),
+      drugSearchInput: $('#drugSearchInput'),
+      searchResults: $('#searchResults'),
       cabinetSelect: $('#cabinetSelect'),
       mobileCabinetSelect: $('#mobileCabinetSelect'),
       retroClockTime: $('#retroClockTime'),
@@ -20077,6 +20712,13 @@
       notFoundBtn: $('#notFoundBtn'),
       saveEntryBtn: $('#saveEntryBtn'),
       deleteEntryBtn: $('#deleteEntryBtn'),
+      tempDrugModal: $('#tempDrugModal'),
+      tempDrugMeta: $('#tempDrugMeta'),
+      tempSlotInput: $('#tempSlotInput'),
+      tempDrugNameInput: $('#tempDrugNameInput'),
+      tempDrugCloseBtn: $('#tempDrugCloseBtn'),
+      tempDrugCancelBtn: $('#tempDrugCancelBtn'),
+      tempDrugAddBtn: $('#tempDrugAddBtn'),
       toast: $('#toast')
     };
 
@@ -20367,6 +21009,91 @@
       dom.retroClockTime.parentElement?.setAttribute('aria-label', '現在時間 ' + hours + ':' + minutes);
     }
 
+    function setSearchOpen(open) {
+      window.clearTimeout(setSearchOpen.primeTimer);
+      dom.searchDock.classList.remove('is-priming');
+      dom.searchDock.classList.toggle('is-open', open);
+      dom.searchToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      dom.searchCloseBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      dom.searchCloseBtn.setAttribute('aria-label', open ? '關閉搜尋' : '搜尋藥品位置');
+      if (open) {
+        renderSearchResults();
+        window.setTimeout(() => dom.drugSearchInput.focus(), 160);
+      } else {
+        dom.drugSearchInput.blur();
+      }
+    }
+
+    function primeSearchOpen() {
+      if (dom.searchDock.classList.contains('is-open') || dom.searchDock.classList.contains('is-priming')) return;
+      dom.searchDock.classList.add('is-priming');
+      dom.searchToggleBtn.setAttribute('aria-expanded', 'true');
+      window.clearTimeout(setSearchOpen.primeTimer);
+      setSearchOpen.primeTimer = window.setTimeout(() => {
+        setSearchOpen(true);
+      }, 860);
+    }
+
+    function closeSearch() {
+      setSearchOpen(false);
+    }
+
+    function currentSearchScope() {
+      return document.querySelector('input[name="searchScope"]:checked')?.value || 'current';
+    }
+
+    function searchableCabinets() {
+      return currentSearchScope() === 'all'
+        ? cabinetCollection
+        : [config];
+    }
+
+    function renderSearchResults() {
+      const query = dom.drugSearchInput.value.trim().toLowerCase();
+      if (!query) {
+        searchMatches = [];
+        dom.searchResults.innerHTML = '<div class="search-empty">輸入藥名或料位號，可快速找到所在層架或抽屜。</div>';
+        return;
+      }
+
+      searchMatches = searchableCabinets().flatMap((cabinet) => {
+        return cabinet.locations.flatMap((location) => {
+          return location.items.map((item, index) => ({ cabinet, location, item, index }));
+        });
+      }).filter(({ cabinet, location, item }) => {
+        const text = [
+          cabinet.cabinetName,
+          location.name,
+          item.slotNo,
+          item.drugName
+        ].join(' ').toLowerCase();
+        return text.includes(query);
+      }).slice(0, 80);
+
+      if (!searchMatches.length) {
+        dom.searchResults.innerHTML = '<div class="search-empty">找不到符合的藥品。</div>';
+        return;
+      }
+
+      dom.searchResults.innerHTML = searchMatches.map(({ cabinet, location, item }, index) => `
+        <button class="search-result" type="button" data-search-index="${index}">
+          <strong>${escapeHtml(item.drugName)}</strong>
+          <span>${escapeHtml(item.slotNo || '未設定料位')}｜${escapeHtml(cabinet.cabinetName)}｜${escapeHtml(location.name)}</span>
+        </button>
+      `).join('');
+    }
+
+    async function goToSearchResult(index) {
+      const match = searchMatches[index];
+      if (!match) return;
+      if (match.cabinet.cabinetId !== config.cabinetId) {
+        await switchCabinet(match.cabinet.cabinetId);
+      }
+      selectLocation(match.location.id);
+      closeSearch();
+      showToast('已定位到 ' + match.location.name);
+    }
+
     async function switchCabinet(cabinetId) {
       const nextConfig = cabinetCollection.find((cabinet) => cabinet.cabinetId === cabinetId);
       if (!nextConfig || nextConfig.cabinetId === config.cabinetId) return;
@@ -20384,9 +21111,23 @@
       return locationId + '::' + drugIndex;
     }
 
+    function formatExpiryInput(value) {
+      const digits = String(value || '').replace(/\D/g, '');
+      const compact = digits.length >= 8 && /^(19|20)\d{6}/.test(digits)
+        ? digits.slice(2, 8)
+        : digits.slice(0, 6);
+      if (compact.length <= 2) return compact;
+      if (compact.length <= 4) return compact.slice(0, 2) + '/' + compact.slice(2);
+      return compact.slice(0, 2) + '/' + compact.slice(2, 4) + '/' + compact.slice(4, 6);
+    }
+
+    function isExpiryComplete(value) {
+      return /^\d{2}\/\d{2}\/\d{2}$/.test(formatExpiryInput(value));
+    }
+
     function isEntryDone(locationId, drugIndex) {
       const entry = entries[entryKey(locationId, drugIndex)];
-      return Boolean(entry && (entry.notFound || (String(entry.quantity).trim() && String(entry.expiryDate).trim())));
+      return Boolean(entry && (entry.notFound || (String(entry.quantity).trim() && isExpiryComplete(entry.expiryDate))));
     }
 
     function isLocationDone(location) {
@@ -20466,6 +21207,29 @@
           progressHeight: 8,
           progressSegments: 12
         });
+      });
+
+      dom.drawerDetails.insertAdjacentHTML('beforeend', `
+        <g>
+          <rect x="210" y="912" width="300" height="30" rx="7" class="cabinet-soft"></rect>
+          <line x1="228" y1="936" x2="492" y2="936" class="cabinet-detail"></line>
+        </g>
+      `);
+      addHitArea({
+        id: 'temporary',
+        label: '臨時藥品',
+        x: 214,
+        y: 914,
+        width: 292,
+        height: 26,
+        textX: 226,
+        textY: 934,
+        className: 'drawer-label',
+        progressX: 392,
+        progressY: 924,
+        progressWidth: 86,
+        progressHeight: 8,
+        progressSegments: 12
       });
     }
 
@@ -20565,18 +21329,25 @@
       dom.locationTitle.textContent = location.name;
       dom.locationHint.textContent = location.items.length
         ? '左右滑動藥品卡片，點選後輸入數量與效期。'
-        : '此位置尚未設定藥品，可到後台加入。';
+        : '此位置尚未設定藥品，可從右側加入臨時品項。';
       dom.locationProgress.textContent = doneCount + ' / ' + location.items.length;
 
+      const addCard = `
+        <button class="drug-card add-drug-card" data-add-temp-drug>
+          <span class="add-drug-icon" aria-hidden="true">+</span>
+          <span>新增臨時藥品</span>
+        </button>
+      `;
+
       if (!location.items.length) {
-        dom.drugStrip.innerHTML = '<div class="empty-state">此位置沒有藥品。若要新增，請開啟後台設定。</div>';
+        dom.drugStrip.innerHTML = addCard;
       } else {
         dom.drugStrip.innerHTML = location.items.map((item, index) => {
           const entry = entries[entryKey(location.id, index)];
           const done = isEntryDone(location.id, index);
           const notFound = Boolean(entry?.notFound);
           const qty = notFound ? '找不到庫存' : (entry?.quantity ? escapeHtml(entry.quantity) : '未輸入');
-          const expiry = notFound ? '不用填寫' : (entry?.expiryDate ? escapeHtml(entry.expiryDate) : '未輸入');
+          const expiry = notFound ? '不用填寫' : (entry?.expiryDate ? escapeHtml(formatExpiryInput(entry.expiryDate)) : '未輸入');
           const statusText = notFound ? '找不到庫存' : (done ? '已完成' : '待輸入');
           return `
             <button class="drug-card ${done ? 'done' : ''}" data-drug-index="${index}">
@@ -20590,7 +21361,7 @@
               <span class="status-pill ${done ? 'done' : ''} ${notFound ? 'not-found' : ''}">${statusText}</span>
             </button>
           `;
-        }).join('');
+        }).join('') + addCard;
       }
 
       renderSummary();
@@ -20659,6 +21430,42 @@
       renderLocationList();
     }
 
+    function openTempDrugModal(locationId = currentLocationId || 'temporary') {
+      tempDrugTargetLocationId = locationId || 'temporary';
+      const location = getLocation(tempDrugTargetLocationId);
+      dom.tempDrugMeta.textContent = (location?.name || '目前位置') + '｜加入後可照一般藥品輸入數量與效期。';
+      dom.tempSlotInput.value = '';
+      dom.tempDrugNameInput.value = '';
+      dom.tempDrugModal.classList.add('show');
+      window.setTimeout(() => dom.tempSlotInput.focus(), 60);
+    }
+
+    function closeTempDrugModal() {
+      dom.tempDrugModal.classList.remove('show');
+      tempDrugTargetLocationId = '';
+    }
+
+    function addTemporaryDrug() {
+      const location = getLocation(tempDrugTargetLocationId || currentLocationId || 'temporary');
+      if (!location) return;
+      const drugName = dom.tempDrugNameInput.value.trim();
+      const slotNo = dom.tempSlotInput.value.trim() || ('TEMP-' + String(location.items.length + 1).padStart(2, '0'));
+      if (!drugName) {
+        showToast('請輸入藥品名稱');
+        dom.tempDrugNameInput.focus();
+        return;
+      }
+      location.items.push({ drugName, slotNo });
+      const newIndex = location.items.length - 1;
+      currentLocationId = location.id;
+      saveConfig();
+      closeTempDrugModal();
+      renderDrugStrip();
+      renderLocationList();
+      openDrugModal(newIndex);
+      showToast('已加入臨時藥品');
+    }
+
     function openDrugModal(index) {
       const location = getLocation(currentLocationId);
       const item = location?.items[index];
@@ -20672,7 +21479,7 @@
       activeCalcLines = normalizeCalcLines(entry.calcLines);
       dom.qtyInput.value = entry.notFound ? '' : (entry.quantity || '');
       calcStartsNewDraft = activeCalcLines.length > 0;
-      dom.expiryInput.value = entry.notFound ? '' : (entry.expiryDate || '');
+      dom.expiryInput.value = entry.notFound ? '' : formatExpiryInput(entry.expiryDate || '');
       dom.calcHistoryDetails.open = false;
       renderCalcHistory();
       document.body.classList.add('modal-open');
@@ -20696,7 +21503,8 @@
         && !calcStartsNewDraft
         && dom.qtyInput.value.trim() !== lineTotal;
       const quantity = activeCalcLines.length ? lineTotal : dom.qtyInput.value.trim();
-      const expiryDate = dom.expiryInput.value.trim();
+      const expiryDate = formatExpiryInput(dom.expiryInput.value);
+      dom.expiryInput.value = expiryDate;
       if (activeCalcLines.length && !hasDraftInProgress) {
         dom.qtyInput.value = quantity;
       }
@@ -20733,6 +21541,11 @@
       autoSaveDrugEntry({ immediate: true });
       closeDrugModal();
       showToast('已自動儲存');
+    }
+
+    function handleExpiryInput(options = {}) {
+      dom.expiryInput.value = formatExpiryInput(dom.expiryInput.value);
+      autoSaveDrugEntry(options);
     }
 
     function markDrugNotFound() {
@@ -20897,7 +21710,7 @@
             item.slotNo || '',
             item.drugName,
             entry.notFound ? '找不到庫存' : (entry.quantity || ''),
-            entry.notFound ? '' : (entry.expiryDate || ''),
+            entry.notFound ? '' : formatExpiryInput(entry.expiryDate || ''),
             entry.notFound ? '找不到庫存' : calcNote
           ]);
         });
@@ -21568,6 +22381,11 @@
     });
 
     dom.drugStrip.addEventListener('click', (event) => {
+      const addCard = event.target.closest('[data-add-temp-drug]');
+      if (addCard) {
+        openTempDrugModal(currentLocationId || 'temporary');
+        return;
+      }
       const card = event.target.closest('[data-drug-index]');
       if (!card) return;
       openDrugModal(Number(card.dataset.drugIndex));
@@ -21597,6 +22415,25 @@
       event.stopPropagation();
       setMobileActionsOpen(!dom.mobileActions.classList.contains('is-open'));
     });
+    dom.searchToggleBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      primeSearchOpen();
+    });
+    dom.searchCloseBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeSearch();
+    });
+    dom.drugSearchInput.addEventListener('input', renderSearchResults);
+    document.querySelectorAll('input[name="searchScope"]').forEach((input) => {
+      input.addEventListener('change', renderSearchResults);
+    });
+    dom.searchResults.addEventListener('click', (event) => {
+      const result = event.target.closest('[data-search-index]');
+      if (!result) return;
+      goToSearchResult(Number(result.dataset.searchIndex));
+    });
     dom.mobileAdminToggleBtn.addEventListener('click', () => {
       toggleAdminPanel();
       closeMobileActions();
@@ -21624,6 +22461,11 @@
       if (!dom.mobileActions.classList.contains('is-open')) return;
       if (event.target.closest('#mobileActions')) return;
       closeMobileActions();
+    });
+    document.addEventListener('click', (event) => {
+      if (!dom.searchDock.classList.contains('is-open')) return;
+      if (event.target.closest('#searchDock')) return;
+      closeSearch();
     });
     dom.exportConfigBtn.addEventListener('click', exportConfig);
     dom.importConfigBtn.addEventListener('click', () => dom.importConfigInput.click());
@@ -21690,11 +22532,24 @@
     dom.modal.addEventListener('dragstart', (event) => {
       event.preventDefault();
     });
+    dom.tempDrugCloseBtn.addEventListener('click', closeTempDrugModal);
+    dom.tempDrugCancelBtn.addEventListener('click', closeTempDrugModal);
+    dom.tempDrugAddBtn.addEventListener('click', addTemporaryDrug);
+    dom.tempDrugModal.addEventListener('click', (event) => {
+      if (event.target === dom.tempDrugModal) closeTempDrugModal();
+    });
+    dom.tempDrugNameInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') addTemporaryDrug();
+    });
+    dom.tempSlotInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') dom.tempDrugNameInput.focus();
+    });
     dom.saveEntryBtn.addEventListener('click', saveDrugEntry);
     dom.deleteEntryBtn.addEventListener('click', deleteDrugEntry);
     dom.notFoundBtn.addEventListener('click', markDrugNotFound);
-    dom.expiryInput.addEventListener('input', () => autoSaveDrugEntry());
-    dom.expiryInput.addEventListener('change', () => autoSaveDrugEntry({ immediate: true }));
+    dom.expiryInput.addEventListener('input', () => handleExpiryInput());
+    dom.expiryInput.addEventListener('change', () => handleExpiryInput({ immediate: true }));
+    dom.expiryInput.addEventListener('blur', () => handleExpiryInput({ immediate: true }));
 
     document.querySelector('.calc').addEventListener('click', (event) => {
       const button = event.target.closest('[data-key]');
@@ -21717,6 +22572,10 @@
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && dom.modal.classList.contains('show')) {
         closeDrugModal();
+      } else if (event.key === 'Escape' && dom.tempDrugModal.classList.contains('show')) {
+        closeTempDrugModal();
+      } else if (event.key === 'Escape' && dom.searchDock.classList.contains('is-open')) {
+        closeSearch();
       } else if (event.key === 'Escape' && dom.adminPanel.classList.contains('show')) {
         closeAdminPanel();
       }
