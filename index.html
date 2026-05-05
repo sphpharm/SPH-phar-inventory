@@ -312,13 +312,45 @@
     }
 
     .cabinet-panel {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
       padding: 16px;
-      transition: filter .22s ease, opacity .22s ease;
+      transition:
+        filter .34s ease,
+        opacity .34s ease,
+        transform .3s cubic-bezier(.22, .8, .2, 1),
+        box-shadow .34s ease;
     }
 
+    .cabinet-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: rgba(244, 244, 242, .16);
+      opacity: 0;
+      transition: opacity .34s ease;
+    }
+
+    body.scene-focus .cabinet-panel,
     body.modal-open .cabinet-panel {
-      filter: blur(4px);
-      opacity: .82;
+      filter: blur(2.2px) saturate(.94) brightness(1.01);
+      opacity: .90;
+      transform: scale(1.006);
+      box-shadow: 0 18px 46px rgba(39, 36, 30, .105);
+    }
+
+    body.scene-focus .cabinet-panel::after,
+    body.modal-open .cabinet-panel::after {
+      opacity: 1;
+    }
+
+    body.admin-focus .work-panel.has-location {
+      filter: blur(1.6px) saturate(.96);
+      opacity: .72;
+      pointer-events: none;
     }
 
     .cabinet-wrap {
@@ -408,6 +440,10 @@
       overflow: hidden;
     }
 
+    .work-panel.has-location {
+      animation: cardPopIn .28s cubic-bezier(.22, .8, .2, 1) both;
+    }
+
     .close-list-btn {
       display: none;
     }
@@ -471,12 +507,58 @@
       color: var(--ink);
       box-shadow: 0 12px 26px rgba(17, 17, 17, .085);
       overflow: hidden;
+      transition:
+        background .18s ease,
+        border-color .18s ease,
+        box-shadow .22s ease,
+        transform .22s cubic-bezier(.22, .8, .2, 1);
     }
 
     .drug-card:hover {
       background: #faf9f6;
       border-color: #d3d0ca;
       box-shadow: 0 14px 30px rgba(17, 17, 17, .11);
+    }
+
+    .drug-card:active {
+      transform: translateY(1px) scale(.985);
+    }
+
+    .drug-card.search-highlight {
+      animation: searchCardBreathe 2.4s cubic-bezier(.2, .8, .2, 1) both;
+      z-index: 1;
+    }
+
+    @keyframes searchCardBreathe {
+      0% {
+        border-color: rgba(213, 213, 209, .92);
+        box-shadow: 0 12px 26px rgba(17, 17, 17, .085);
+      }
+      18% {
+        border-color: rgba(208, 139, 67, .92);
+        box-shadow:
+          0 0 0 4px rgba(235, 166, 83, .18),
+          0 0 28px rgba(235, 166, 83, .32),
+          0 18px 36px rgba(17, 17, 17, .16);
+      }
+      42% {
+        border-color: rgba(163, 106, 57, .72);
+        box-shadow:
+          0 0 0 2px rgba(235, 166, 83, .10),
+          0 0 16px rgba(235, 166, 83, .18),
+          0 14px 30px rgba(17, 17, 17, .11);
+      }
+      68% {
+        border-color: rgba(208, 139, 67, .86);
+        box-shadow:
+          0 0 0 5px rgba(235, 166, 83, .16),
+          0 0 30px rgba(235, 166, 83, .28),
+          0 18px 38px rgba(17, 17, 17, .15);
+      }
+      100% {
+        border-color: var(--line);
+        box-shadow: 0 12px 26px rgba(17, 17, 17, .085);
+      }
     }
 
     .drug-card.done {
@@ -650,6 +732,7 @@
 
     .admin-panel.show {
       display: block;
+      animation: cardPopIn .28s cubic-bezier(.22, .8, .2, 1) both;
     }
 
     .admin-grid {
@@ -820,6 +903,12 @@
       display: flex;
     }
 
+    #drugModal.modal-backdrop {
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px 16px 0;
+    }
+
     .modal {
       width: min(560px, 100%);
       max-height: min(760px, calc(100vh - 32px));
@@ -841,18 +930,48 @@
       -webkit-user-drag: none;
     }
 
-    .modal-backdrop.show .modal {
-      animation: modalPopIn .22s cubic-bezier(.2, .82, .2, 1) both;
+    #drugModal .modal {
+      max-height: min(760px, calc(100dvh - 68px));
+      border-radius: 26px 26px 0 0;
+      border-bottom: 0;
     }
 
-    @keyframes modalPopIn {
-      from {
+    .modal-backdrop.show .modal {
+      animation: cardPopIn .28s cubic-bezier(.22, .8, .2, 1) both;
+    }
+
+    #drugModal.show .modal {
+      transform-origin: center bottom;
+      animation: inventorySheetPop .34s cubic-bezier(.22, .8, .2, 1) both;
+    }
+
+    @keyframes cardPopIn {
+      0% {
         opacity: 0;
-        transform: translateY(18px) scale(.985);
+        transform: translateY(12px) scale(.96);
       }
-      to {
+      70% {
+        opacity: 1;
+        transform: translateY(-1px) scale(1.003);
+      }
+      100% {
         opacity: 1;
         transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes inventorySheetPop {
+      0% {
+        opacity: .84;
+        transform: translateY(calc(100% + 28px));
+      }
+      76% {
+        opacity: 1;
+        transform: translateY(-3px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
@@ -1141,7 +1260,7 @@
       left: 14px;
       bottom: calc(14px + env(safe-area-inset-bottom));
       z-index: 19;
-      --search-panel-width: min(380px, calc(100vw - 28px));
+      --search-panel-width: min(390px, calc(100vw - 28px));
       display: grid;
       align-items: end;
       justify-items: start;
@@ -1174,7 +1293,7 @@
 
     .search-dock.is-open .search-toggle {
       opacity: 0;
-      transform: translateY(6px) scale(.94);
+      transform: scale(.92);
       pointer-events: none;
     }
 
@@ -1223,29 +1342,23 @@
       bottom: 0;
       width: var(--search-panel-width);
       max-width: var(--search-panel-width);
-      max-height: 68px;
+      max-height: min(520px, calc(100dvh - 104px));
       padding: 10px;
       background: rgba(244, 244, 242, .96);
       border: 1px solid rgba(220, 220, 216, .86);
       border-radius: 22px;
-      box-shadow: 0 20px 42px rgba(17, 17, 17, .12);
+      box-shadow: 0 20px 42px rgba(17, 17, 17, .16);
       backdrop-filter: none;
       overflow: hidden;
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: translateY(14px) scale(.96);
+      transform: translateY(10px) scale(.96);
       transform-origin: bottom left;
       transition:
-        opacity .22s ease,
-        visibility .22s ease,
-        transform .34s cubic-bezier(.2, .9, .2, 1),
-        max-height .36s cubic-bezier(.2, .9, .2, 1),
-        padding .30s cubic-bezier(.2, .9, .2, 1),
-        background-color .22s ease,
-        border-color .22s ease,
-        border-radius .30s cubic-bezier(.2, .9, .2, 1),
-        box-shadow .22s ease;
+        opacity .12s ease,
+        visibility .12s ease,
+        transform .28s cubic-bezier(.22, .8, .2, 1);
     }
 
     .search-dock.is-open .search-panel {
@@ -1253,12 +1366,7 @@
       visibility: visible;
       pointer-events: auto;
       transform: translateY(0) scale(1);
-    }
-
-    .search-dock.is-expanded .search-panel {
-      max-height: min(500px, calc(100dvh - 92px));
-      box-shadow: 0 20px 42px rgba(17, 17, 17, .16);
-      backdrop-filter: blur(14px);
+      animation: cardPopIn .28s cubic-bezier(.22, .8, .2, 1) both;
     }
 
     .search-form {
@@ -1276,10 +1384,6 @@
       box-shadow: 0 18px 34px rgba(39, 36, 30, .12), inset 0 1px 2px rgba(17, 17, 17, .035);
       overflow: hidden;
       position: relative;
-      transition:
-        background-color .20s ease,
-        border-color .20s ease,
-        box-shadow .20s ease;
     }
 
     .search-form::after {
@@ -1302,7 +1406,6 @@
       outline: none;
       opacity: 1;
       pointer-events: auto;
-      transition: opacity .16s ease, padding .16s ease;
     }
 
     .search-close-btn {
@@ -1319,13 +1422,6 @@
       border-radius: 999px;
       font-size: 20px;
       line-height: 1;
-      position: relative;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .16s ease, background .2s ease, color .2s ease, transform .12s ease;
-    }
-
-    .search-dock.is-open .search-close-btn {
       opacity: 1;
       pointer-events: auto;
     }
@@ -1371,10 +1467,10 @@
       margin-top: 9px;
       opacity: 0;
       transform: translateY(8px);
-      transition: opacity .22s ease .08s, transform .28s cubic-bezier(.16, 1, .3, 1) .08s;
+      transition: opacity .18s ease .08s, transform .24s cubic-bezier(.22, .8, .2, 1) .08s;
     }
 
-    .search-dock.is-expanded .search-scope {
+    .search-dock.is-open .search-scope {
       opacity: 1;
       transform: translateY(0);
     }
@@ -1409,10 +1505,10 @@
       overscroll-behavior: contain;
       opacity: 0;
       transform: translateY(8px);
-      transition: opacity .22s ease .12s, transform .28s cubic-bezier(.16, 1, .3, 1) .12s;
+      transition: opacity .18s ease .12s, transform .26s cubic-bezier(.22, .8, .2, 1) .12s;
     }
 
-    .search-dock.is-expanded .search-results {
+    .search-dock.is-open .search-results {
       opacity: 1;
       transform: translateY(0);
     }
@@ -1428,6 +1524,15 @@
       border-radius: 14px;
       box-shadow: 0 7px 16px rgba(17, 17, 17, .05);
       text-align: left;
+      transition:
+        background .18s ease,
+        border-color .18s ease,
+        box-shadow .22s ease,
+        transform .22s cubic-bezier(.22, .8, .2, 1);
+    }
+
+    .search-result:active {
+      transform: translateY(1px) scale(.985);
     }
 
     .search-result strong {
@@ -1628,8 +1733,8 @@
         opacity: 0;
         pointer-events: none;
         visibility: hidden;
-        transform: translateY(16px) scale(.86) rotate(-2deg);
-        transition: opacity .24s ease, transform .34s cubic-bezier(.16, 1, .3, 1), visibility .24s ease;
+        transform: translateY(10px) scale(.97);
+        transition: opacity .18s ease, transform .28s cubic-bezier(.22, .8, .2, 1), visibility .18s ease;
         transform-origin: bottom right;
         will-change: transform, opacity;
       }
@@ -1638,7 +1743,8 @@
         opacity: 1;
         pointer-events: auto;
         visibility: visible;
-        transform: translateY(0) scale(1) rotate(0deg);
+        transform: translateY(0) scale(1);
+        animation: cardPopIn .28s cubic-bezier(.22, .8, .2, 1) both;
       }
 
       .mobile-actions-panel button {
@@ -1649,8 +1755,8 @@
         border: 1px solid #111111;
         box-shadow: 0 10px 20px rgba(17, 17, 17, .12);
         opacity: 0;
-        transform: translateY(8px);
-        transition: opacity .22s ease, transform .28s cubic-bezier(.16, 1, .3, 1);
+        transform: translateY(5px);
+        transition: opacity .18s ease, transform .24s cubic-bezier(.22, .8, .2, 1);
       }
 
       .mobile-actions.is-open .mobile-actions-panel button {
@@ -1712,15 +1818,16 @@
         background: rgba(232, 232, 228, .96);
         box-shadow: 0 18px 42px rgba(17, 17, 17, .15);
         backdrop-filter: blur(14px);
-        transform: translateY(calc(-100% - 72px));
+        transform: translateY(calc(-100% - 72px)) scale(.98);
         opacity: 0;
         pointer-events: none;
-        transition: transform .22s ease, opacity .22s ease;
+        transition: transform .28s cubic-bezier(.22, .8, .2, 1), opacity .18s ease;
         isolation: isolate;
+        transform-origin: top center;
       }
 
       .work-panel.has-location {
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         opacity: 1;
         pointer-events: auto;
       }
@@ -1927,6 +2034,10 @@
         backdrop-filter: none;
       }
 
+      #drugModal.modal-backdrop {
+        padding: 0;
+      }
+
       .modal {
         width: 100%;
         max-height: 92dvh;
@@ -1940,18 +2051,7 @@
       }
 
       .modal-backdrop.show .modal {
-        animation: sheetSlideUp .24s cubic-bezier(.2, .86, .2, 1) both;
-      }
-
-      @keyframes sheetSlideUp {
-        from {
-          opacity: .72;
-          transform: translateY(32px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        animation: cardPopIn .28s cubic-bezier(.22, .8, .2, 1) both;
       }
 
       .sheet-handle {
@@ -2105,35 +2205,6 @@
       .modal-footer .button-secondary {
         background: rgba(255, 255, 255, .70);
         border-color: rgba(255, 255, 255, .90);
-      }
-
-      @keyframes menuRollOut {
-        from {
-          opacity: 0;
-          filter: blur(4px);
-          transform: translateY(16px) scale(.86) rotate(-2deg);
-        }
-        62% {
-          opacity: 1;
-          filter: blur(0);
-          transform: translateY(-3px) scale(1.02) rotate(.4deg);
-        }
-        to {
-          opacity: 1;
-          filter: blur(0);
-          transform: translateY(0) scale(1) rotate(0deg);
-        }
-      }
-
-      @keyframes menuItemIn {
-        from {
-          opacity: 0;
-          transform: translateY(9px) scale(.96);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
       }
 
       .drug-row {
@@ -20817,13 +20888,26 @@
       dom.retroClockTime.parentElement?.setAttribute('aria-label', '現在時間 ' + hours + ':' + minutes);
     }
 
+    function syncSceneFocus() {
+      const adminOpen = dom.adminPanel.classList.contains('show');
+      const modalOpen = dom.modal.classList.contains('show') || dom.tempDrugModal.classList.contains('show');
+      const hasFloatingCard = Boolean(currentLocationId)
+        || adminOpen
+        || modalOpen
+        || dom.searchDock.classList.contains('is-open')
+        || dom.mobileActions.classList.contains('is-open');
+      document.body.classList.toggle('scene-focus', hasFloatingCard);
+      document.body.classList.toggle('admin-focus', adminOpen);
+      document.body.classList.toggle('modal-open', modalOpen);
+    }
+
     function setSearchOpen(open) {
       window.clearTimeout(setSearchOpen.primeTimer);
       dom.searchDock.classList.toggle('is-open', open);
-      if (!open) dom.searchDock.classList.remove('is-expanded');
       dom.searchToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
       dom.searchCloseBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
       dom.searchCloseBtn.setAttribute('aria-label', open ? '關閉搜尋' : '搜尋藥品位置');
+      syncSceneFocus();
       if (open) {
         renderSearchResults();
         window.setTimeout(() => dom.drugSearchInput.focus(), 160);
@@ -20834,7 +20918,8 @@
 
     function primeSearchOpen() {
       if (dom.searchDock.classList.contains('is-open')) return;
-      dom.searchDock.classList.remove('is-expanded');
+      closeMobileActions();
+      if (currentLocationId) closeDrugList();
       setSearchOpen(true);
     }
 
@@ -20854,7 +20939,6 @@
 
     function renderSearchResults() {
       const query = dom.drugSearchInput.value.trim().toLowerCase();
-      dom.searchDock.classList.toggle('is-expanded', dom.searchDock.classList.contains('is-open') && Boolean(query));
       if (!query) {
         searchMatches = [];
         dom.searchResults.innerHTML = '<div class="search-empty">輸入藥名或料位號，可快速找到所在層架或抽屜。</div>';
@@ -20896,7 +20980,23 @@
       }
       selectLocation(match.location.id);
       closeSearch();
-      showToast('已定位到 ' + match.location.name);
+      window.setTimeout(() => highlightDrugCard(match.index), 80);
+      showToast('已定位到 ' + match.location.name + ' 的藥品卡片');
+    }
+
+    function highlightDrugCard(drugIndex) {
+      const card = dom.drugStrip.querySelector(`[data-drug-index="${drugIndex}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      window.setTimeout(() => {
+        card.classList.remove('search-highlight');
+        void card.offsetWidth;
+        card.classList.add('search-highlight');
+        window.clearTimeout(highlightDrugCard.timer);
+        highlightDrugCard.timer = window.setTimeout(() => {
+          card.classList.remove('search-highlight');
+        }, 2600);
+      }, 280);
     }
 
     async function switchCabinet(cabinetId) {
@@ -21124,6 +21224,7 @@
         dom.locationHint.textContent = '選擇位置後，這裡會顯示該位置的藥品清單。';
         dom.locationProgress.textContent = '0 / 0';
         dom.drugStrip.innerHTML = '<div class="empty-state">目前沒有選取位置。</div>';
+        syncSceneFocus();
         renderSummary();
         renderCabinetArt();
         return;
@@ -21172,6 +21273,7 @@
       renderSummary();
       renderCabinetArt();
       renderAdminList();
+      syncSceneFocus();
     }
 
     function renderSummary() {
@@ -21242,12 +21344,14 @@
       dom.tempSlotInput.value = '';
       dom.tempDrugNameInput.value = '';
       dom.tempDrugModal.classList.add('show');
+      syncSceneFocus();
       window.setTimeout(() => dom.tempSlotInput.focus(), 60);
     }
 
     function closeTempDrugModal() {
       dom.tempDrugModal.classList.remove('show');
       tempDrugTargetLocationId = '';
+      syncSceneFocus();
     }
 
     function addTemporaryDrug() {
@@ -21287,17 +21391,17 @@
       dom.expiryInput.value = entry.notFound ? '' : formatExpiryInput(entry.expiryDate || '');
       dom.calcHistoryDetails.open = false;
       renderCalcHistory();
-      document.body.classList.add('modal-open');
       dom.modal.classList.add('show');
+      syncSceneFocus();
     }
 
     function closeDrugModal() {
       dom.modal.classList.remove('show');
-      document.body.classList.remove('modal-open');
       activeDrugIndex = -1;
       activeLocationId = '';
       activeCalcLines = [];
       calcStartsNewDraft = false;
+      syncSceneFocus();
     }
 
     function autoSaveDrugEntry(options = {}) {
@@ -22103,6 +22207,7 @@
       }
       doc.querySelector('#drugModal')?.classList.remove('show');
       doc.querySelector('#adminPanel')?.classList.remove('show');
+      doc.querySelector('body')?.classList.remove('scene-focus', 'admin-focus', 'modal-open');
       const html = '<!doctype html>\n' + doc.outerHTML;
       downloadText(
         safeFileName(config.cabinetName || '調劑台盤點') + '_已綁定盤點網頁.html',
@@ -22199,26 +22304,65 @@
     function toggleAdminPanel() {
       dom.adminPanel.classList.toggle('show');
       renderAdmin();
+      syncSceneFocus();
     }
 
     function closeAdminPanel() {
       dom.adminPanel.classList.remove('show');
+      syncSceneFocus();
     }
 
     function setMobileActionsOpen(open) {
       dom.mobileActions.classList.toggle('is-open', open);
       dom.mobileActionsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      syncSceneFocus();
     }
 
     function closeMobileActions() {
       setMobileActionsOpen(false);
     }
 
+    function isInsideFloatingSurface(target) {
+      return Boolean(target.closest('#searchDock, #mobileActions, #workPanel, #adminPanel, .modal-backdrop.show'));
+    }
+
+    function closeTopFloatingSurface() {
+      if (dom.searchDock.classList.contains('is-open')) {
+        closeSearch();
+        return true;
+      }
+      if (dom.mobileActions.classList.contains('is-open')) {
+        closeMobileActions();
+        return true;
+      }
+      if (currentLocationId) {
+        closeDrugList();
+        return true;
+      }
+      return false;
+    }
+
+    function consumeOutsideFloatingClick(event) {
+      if (event.defaultPrevented || !(event.target instanceof Element)) return;
+      if (isInsideFloatingSurface(event.target)) return;
+      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [role="menuitem"]')) return;
+      if (!closeTopFloatingSurface()) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+
+    document.addEventListener('click', consumeOutsideFloatingClick, true);
+
     dom.adminToggleBtn.addEventListener('click', toggleAdminPanel);
     dom.mobileActionsToggle.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      setMobileActionsOpen(!dom.mobileActions.classList.contains('is-open'));
+      const willOpen = !dom.mobileActions.classList.contains('is-open');
+      if (willOpen) {
+        closeSearch();
+        if (currentLocationId) closeDrugList();
+      }
+      setMobileActionsOpen(willOpen);
     });
     dom.searchToggleBtn.addEventListener('click', (event) => {
       event.preventDefault();
