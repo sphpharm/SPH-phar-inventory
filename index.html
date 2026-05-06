@@ -446,7 +446,7 @@
 
     .work-panel.closing {
       pointer-events: none;
-      animation: drugListDropOut .24s cubic-bezier(.32, .02, .42, .98) both;
+      animation: drugListDropOut .19s cubic-bezier(.34, .02, .32, 1) both;
     }
 
     .close-list-btn {
@@ -616,38 +616,43 @@
     }
 
     .add-drug-card {
+      flex-basis: min(150px, 52vw);
+      height: 118px;
+      align-self: center;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      color: #5A5149;
-      background: rgba(247, 247, 245, .70);
-      border: 1px dashed rgba(122, 120, 113, .42);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .78), 0 10px 22px rgba(17, 17, 17, .055);
+      gap: 9px;
+      color: rgba(77, 77, 73, .70);
+      background: transparent;
+      border: 1px dashed rgba(122, 120, 113, .34);
+      box-shadow: none;
     }
 
     .add-drug-card:hover {
-      color: #2F2924;
-      background: #F8F8F6;
-      border-color: rgba(203, 139, 72, .64);
+      color: #4D4D49;
+      background: rgba(248, 248, 246, .34);
+      border-color: rgba(122, 120, 113, .46);
+      box-shadow: none;
     }
 
     .add-drug-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 42px;
-      height: 42px;
-      color: #F7F1EA;
-      background: #A36A39;
+      width: 34px;
+      height: 34px;
+      color: rgba(77, 77, 73, .74);
+      background: rgba(244, 244, 242, .52);
+      border: 1px solid rgba(122, 120, 113, .22);
       border-radius: 999px;
-      box-shadow: 0 10px 22px rgba(163, 106, 57, .20);
-      font-size: 28px;
+      box-shadow: none;
+      font-size: 23px;
       line-height: 1;
     }
 
     .add-drug-card span:last-child {
-      font-size: 13px;
-      font-weight: 780;
+      font-size: 12px;
+      font-weight: 720;
     }
 
     .drug-title {
@@ -743,7 +748,7 @@
     .admin-panel.closing {
       display: block;
       pointer-events: none;
-      animation: cardDismiss .24s cubic-bezier(.32, .02, .42, .98) both;
+      animation: cardDismiss .19s cubic-bezier(.34, .02, .32, 1) both;
     }
 
     .admin-grid {
@@ -956,7 +961,7 @@
     }
 
     .modal-backdrop.closing .modal {
-      animation: cardDismiss .24s cubic-bezier(.32, .02, .42, .98) both;
+      animation: cardDismiss .19s cubic-bezier(.34, .02, .32, 1) both;
     }
 
     #drugModal.show .modal {
@@ -966,7 +971,7 @@
 
     #drugModal.closing .modal {
       transform-origin: center bottom;
-      animation: inventorySheetDismiss .26s cubic-bezier(.32, .02, .42, .98) both;
+      animation: inventorySheetDismiss .21s cubic-bezier(.34, .02, .32, 1) both;
     }
 
     @keyframes cardPopIn {
@@ -1004,9 +1009,43 @@
         opacity: 1;
         transform: translateY(0) scale(1);
       }
+      36% {
+        opacity: .96;
+        transform: translateY(3px) scale(1.004);
+      }
       100% {
         opacity: 0;
-        transform: translateY(-18px) scale(.992);
+        transform: translateY(-22px) scale(.985);
+      }
+    }
+
+    @keyframes searchPanelDismiss {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      34% {
+        opacity: .95;
+        transform: translateY(-2px) scale(1.012);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(18px) scale(.72);
+      }
+    }
+
+    @keyframes actionPanelDismiss {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+      }
+      34% {
+        opacity: .95;
+        transform: translateY(-2px) scale(1.012) rotate(.3deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(16px) scale(.86) rotate(-2deg);
       }
     }
 
@@ -1015,9 +1054,13 @@
         opacity: 1;
         transform: translateY(0) scale(1);
       }
+      34% {
+        opacity: .94;
+        transform: translateY(-2px) scale(1.01);
+      }
       100% {
         opacity: 0;
-        transform: translateY(14px) scale(.96);
+        transform: translateY(16px) scale(.94);
       }
     }
 
@@ -1040,6 +1083,10 @@
       0% {
         opacity: 1;
         transform: translateY(0);
+      }
+      26% {
+        opacity: .96;
+        transform: translateY(-4px);
       }
       100% {
         opacity: .66;
@@ -1445,6 +1492,12 @@
       animation: cardPopIn .34s cubic-bezier(.18, .98, .24, 1.12) both;
     }
 
+    .search-dock.closing .search-panel {
+      visibility: visible;
+      pointer-events: none;
+      animation: searchPanelDismiss .20s cubic-bezier(.34, .02, .32, 1) both;
+    }
+
     .search-form {
       display: flex;
       align-items: center;
@@ -1832,6 +1885,12 @@
         animation: cardPopIn .34s cubic-bezier(.18, .98, .24, 1.12) both;
       }
 
+      .mobile-actions.closing .mobile-actions-panel {
+        visibility: visible;
+        pointer-events: none;
+        animation: actionPanelDismiss .20s cubic-bezier(.34, .02, .32, 1) both;
+      }
+
       .mobile-actions-panel button {
         min-height: 44px;
         border-radius: 999px;
@@ -1850,17 +1909,23 @@
         transform: translateY(0);
       }
 
+      .mobile-actions.closing .mobile-actions-panel button {
+        opacity: 0;
+        transform: translateY(8px);
+        transition-delay: 0s;
+      }
+
       .mobile-actions-panel .button-secondary {
         color: var(--ink);
         background: #F8F8F6;
         border-color: #D5D5D1;
       }
 
-      .mobile-actions.is-open .mobile-actions-panel button:nth-child(2) {
+      .mobile-actions.is-open:not(.closing) .mobile-actions-panel button:nth-child(2) {
         transition-delay: .06s;
       }
 
-      .mobile-actions.is-open .mobile-actions-panel button:nth-child(3) {
+      .mobile-actions.is-open:not(.closing) .mobile-actions-panel button:nth-child(3) {
         transition-delay: .11s;
       }
 
@@ -2008,6 +2073,34 @@
         background: #F7F7F5;
         border-color: #d0d0cb;
         box-shadow: 0 18px 38px rgba(17, 17, 17, .16);
+      }
+
+      .add-drug-card {
+        flex-basis: min(132px, 46vw);
+        height: 112px;
+        align-self: center;
+        padding: 10px;
+        color: rgba(77, 77, 73, .66);
+        background: transparent;
+        border: 1px dashed rgba(122, 120, 113, .32);
+        box-shadow: none;
+      }
+
+      .add-drug-card:hover {
+        color: #4D4D49;
+        background: rgba(248, 248, 246, .30);
+        border-color: rgba(122, 120, 113, .44);
+        box-shadow: none;
+      }
+
+      .add-drug-icon {
+        width: 32px;
+        height: 32px;
+        color: rgba(77, 77, 73, .72);
+        background: rgba(244, 244, 242, .48);
+        border: 1px solid rgba(122, 120, 113, .20);
+        box-shadow: none;
+        font-size: 22px;
       }
 
       .drug-card.done {
@@ -20985,7 +21078,9 @@
         || adminOpen
         || modalOpen
         || dom.searchDock.classList.contains('is-open')
-        || dom.mobileActions.classList.contains('is-open');
+        || dom.searchDock.classList.contains('closing')
+        || dom.mobileActions.classList.contains('is-open')
+        || dom.mobileActions.classList.contains('closing');
       document.body.classList.toggle('scene-focus', hasFloatingCard);
       document.body.classList.toggle('admin-focus', adminOpen);
       document.body.classList.toggle('modal-open', modalOpen);
@@ -20993,16 +21088,30 @@
 
     function setSearchOpen(open) {
       window.clearTimeout(setSearchOpen.primeTimer);
-      dom.searchDock.classList.toggle('is-open', open);
       dom.searchToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
       dom.searchCloseBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
       dom.searchCloseBtn.setAttribute('aria-label', open ? '關閉搜尋' : '搜尋藥品位置');
-      syncSceneFocus();
       if (open) {
+        window.clearTimeout(setSearchOpen.closeTimer);
+        dom.searchDock.classList.remove('closing');
+        dom.searchDock.classList.add('is-open');
+        syncSceneFocus();
         renderSearchResults();
         window.setTimeout(() => dom.drugSearchInput.focus(), 160);
       } else {
         dom.drugSearchInput.blur();
+        if (!dom.searchDock.classList.contains('is-open')) {
+          dom.searchDock.classList.remove('closing');
+          syncSceneFocus();
+          return;
+        }
+        if (dom.searchDock.classList.contains('closing')) return;
+        dom.searchDock.classList.add('closing');
+        syncSceneFocus();
+        setSearchOpen.closeTimer = window.setTimeout(() => {
+          dom.searchDock.classList.remove('is-open', 'closing');
+          syncSceneFocus();
+        }, 205);
       }
     }
 
@@ -21439,7 +21548,7 @@
         dom.workPanel.classList.remove('closing');
         renderDrugStrip();
         renderLocationList();
-      }, 240);
+      }, 200);
     }
 
     function openTempDrugModal(locationId = currentLocationId || 'temporary') {
@@ -21469,7 +21578,7 @@
         dom.tempDrugModal.classList.remove('show', 'closing');
         tempDrugTargetLocationId = '';
         syncSceneFocus();
-      }, 240);
+      }, 200);
     }
 
     function addTemporaryDrug() {
@@ -21535,7 +21644,7 @@
         activeCalcLines = [];
         calcStartsNewDraft = false;
         syncSceneFocus();
-      }, 260);
+      }, 220);
     }
 
     function closeDrugModalNow() {
@@ -22470,13 +22579,30 @@
       closeAdminPanel.timer = window.setTimeout(() => {
         dom.adminPanel.classList.remove('show', 'closing');
         syncSceneFocus();
-      }, 240);
+      }, 200);
     }
 
     function setMobileActionsOpen(open) {
-      dom.mobileActions.classList.toggle('is-open', open);
       dom.mobileActionsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      window.clearTimeout(setMobileActionsOpen.closeTimer);
+      if (open) {
+        dom.mobileActions.classList.remove('closing');
+        dom.mobileActions.classList.add('is-open');
+        syncSceneFocus();
+        return;
+      }
+      if (!dom.mobileActions.classList.contains('is-open')) {
+        dom.mobileActions.classList.remove('closing');
+        syncSceneFocus();
+        return;
+      }
+      if (dom.mobileActions.classList.contains('closing')) return;
+      dom.mobileActions.classList.add('closing');
       syncSceneFocus();
+      setMobileActionsOpen.closeTimer = window.setTimeout(() => {
+        dom.mobileActions.classList.remove('is-open', 'closing');
+        syncSceneFocus();
+      }, 205);
     }
 
     function closeMobileActions() {
