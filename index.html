@@ -1360,7 +1360,7 @@
       backdrop-filter: blur(12px);
       overflow: hidden;
       position: relative;
-      transition: opacity .18s ease, transform .22s cubic-bezier(.2, .9, .2, 1);
+      transition: opacity .24s ease, transform .28s cubic-bezier(.2, .9, .2, 1);
     }
 
     .search-dock.is-open .search-toggle {
@@ -1428,8 +1428,8 @@
       transform: translateY(18px) scale(.72);
       transform-origin: bottom left;
       transition:
-        opacity .12s ease,
-        visibility .12s ease,
+        opacity .22s ease,
+        visibility 0s linear .34s,
         transform .34s cubic-bezier(.18, .98, .24, 1.12);
     }
 
@@ -1438,6 +1438,10 @@
       visibility: visible;
       pointer-events: auto;
       transform: translateY(0) scale(1);
+      transition:
+        opacity .16s ease,
+        visibility 0s linear 0s,
+        transform .34s cubic-bezier(.18, .98, .24, 1.12);
       animation: cardPopIn .34s cubic-bezier(.18, .98, .24, 1.12) both;
     }
 
@@ -1669,7 +1673,8 @@
 
       .topbar {
         min-height: 54px;
-        padding: 9px 15px;
+        padding: 9px 12px;
+        gap: 8px;
         background: rgba(244, 244, 242, .90);
         box-shadow: 0 8px 22px rgba(17, 17, 17, .055);
         backdrop-filter: blur(14px);
@@ -1689,7 +1694,8 @@
       }
 
       .retro-clock {
-        min-width: 72px;
+        min-width: 70px;
+        flex: 0 0 auto;
         height: 30px;
         padding: 0 8px;
         border-radius: 9px;
@@ -1698,19 +1704,23 @@
       }
 
       .cabinet-switcher {
-        width: min(230px, 56vw);
+        width: clamp(118px, 38vw, 170px);
       }
 
       .cabinet-switch {
         min-width: 0;
-        min-height: 38px;
-        padding: 8px 34px 8px 14px;
+        min-height: 34px;
+        padding: 7px 26px 7px 11px;
         border-radius: 999px;
-        font-size: 14px;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         box-shadow: 0 9px 18px rgba(17, 17, 17, .07), inset 0 1px 0 rgba(255, 255, 255, .78);
       }
 
       .topbar-right {
+        flex: 0 0 auto;
         gap: 0;
       }
 
@@ -1753,7 +1763,7 @@
         user-select: none;
         list-style: none;
         backdrop-filter: blur(12px);
-        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+        transition: transform .28s cubic-bezier(.2, .9, .2, 1), box-shadow .22s ease, background .22s ease;
       }
 
       .mobile-actions.is-open .mobile-actions-toggle {
@@ -1808,7 +1818,7 @@
         pointer-events: none;
         visibility: hidden;
         transform: translateY(16px) scale(.86) rotate(-2deg);
-        transition: opacity .18s ease, transform .34s cubic-bezier(.18, .98, .24, 1.12), visibility .18s ease;
+        transition: opacity .24s ease, transform .34s cubic-bezier(.18, .98, .24, 1.12), visibility 0s linear .34s;
         transform-origin: bottom right;
         will-change: transform, opacity;
       }
@@ -1818,6 +1828,7 @@
         pointer-events: auto;
         visibility: visible;
         transform: translateY(0) scale(1) rotate(0deg);
+        transition: opacity .18s ease, transform .34s cubic-bezier(.18, .98, .24, 1.12), visibility 0s linear 0s;
         animation: cardPopIn .34s cubic-bezier(.18, .98, .24, 1.12) both;
       }
 
@@ -1830,7 +1841,8 @@
         box-shadow: 0 10px 20px rgba(17, 17, 17, .12);
         opacity: 0;
         transform: translateY(8px);
-        transition: opacity .18s ease, transform .32s cubic-bezier(.18, .98, .24, 1.12);
+        transition: opacity .22s ease, transform .32s cubic-bezier(.18, .98, .24, 1.12);
+        transition-delay: 0s;
       }
 
       .mobile-actions.is-open .mobile-actions-panel button {
@@ -1844,11 +1856,11 @@
         border-color: #D5D5D1;
       }
 
-      .mobile-actions-panel button:nth-child(2) {
+      .mobile-actions.is-open .mobile-actions-panel button:nth-child(2) {
         transition-delay: .06s;
       }
 
-      .mobile-actions-panel button:nth-child(3) {
+      .mobile-actions.is-open .mobile-actions-panel button:nth-child(3) {
         transition-delay: .11s;
       }
 
