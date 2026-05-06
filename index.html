@@ -444,6 +444,11 @@
       animation: drugListDropIn .38s cubic-bezier(.22, .78, .22, 1) both;
     }
 
+    .work-panel.closing {
+      pointer-events: none;
+      animation: drugListDropOut .24s cubic-bezier(.32, .02, .42, .98) both;
+    }
+
     .close-list-btn {
       display: none;
     }
@@ -735,6 +740,12 @@
       animation: cardPopIn .34s cubic-bezier(.18, .98, .24, 1.12) both;
     }
 
+    .admin-panel.closing {
+      display: block;
+      pointer-events: none;
+      animation: cardDismiss .24s cubic-bezier(.32, .02, .42, .98) both;
+    }
+
     .admin-grid {
       display: grid;
       grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
@@ -903,6 +914,10 @@
       display: flex;
     }
 
+    .modal-backdrop.closing {
+      display: flex;
+    }
+
     #drugModal.modal-backdrop {
       align-items: flex-end;
       justify-content: center;
@@ -938,6 +953,10 @@
 
     .modal-backdrop.show .modal {
       animation: cardPopIn .34s cubic-bezier(.18, .98, .24, 1.12) both;
+    }
+
+    .modal-backdrop.closing .modal {
+      animation: cardDismiss .24s cubic-bezier(.32, .02, .42, .98) both;
     }
 
     #drugModal.show .modal {
@@ -977,6 +996,28 @@
       100% {
         opacity: 1;
         transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes drugListDropOut {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-18px) scale(.992);
+      }
+    }
+
+    @keyframes cardDismiss {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(14px) scale(.96);
       }
     }
 
@@ -20923,8 +20964,11 @@
     }
 
     function syncSceneFocus() {
-      const adminOpen = dom.adminPanel.classList.contains('show');
-      const modalOpen = dom.modal.classList.contains('show') || dom.tempDrugModal.classList.contains('show');
+      const adminOpen = dom.adminPanel.classList.contains('show') || dom.adminPanel.classList.contains('closing');
+      const modalOpen = dom.modal.classList.contains('show')
+        || dom.modal.classList.contains('closing')
+        || dom.tempDrugModal.classList.contains('show')
+        || dom.tempDrugModal.classList.contains('closing');
       const hasFloatingCard = Boolean(currentLocationId)
         || adminOpen
         || modalOpen
@@ -21359,33 +21403,61 @@
     }
 
     function selectLocation(locationId) {
+      window.clearTimeout(closeDrugList.timer);
+      dom.workPanel.classList.remove('closing');
       currentLocationId = locationId;
       renderDrugStrip();
       renderLocationList();
     }
 
     function closeDrugList() {
-      currentLocationId = '';
+      window.clearTimeout(closeDrugList.timer);
       closeDrugModal();
-      renderDrugStrip();
-      renderLocationList();
+      if (!currentLocationId) {
+        dom.workPanel.classList.remove('closing');
+        renderDrugStrip();
+        renderLocationList();
+        return;
+      }
+      if (dom.workPanel.classList.contains('closing')) return;
+      dom.workPanel.classList.add('closing');
+      dom.workPanel.classList.remove('has-location');
+      closeDrugList.timer = window.setTimeout(() => {
+        currentLocationId = '';
+        dom.workPanel.classList.remove('closing');
+        renderDrugStrip();
+        renderLocationList();
+      }, 240);
     }
 
     function openTempDrugModal(locationId = currentLocationId || 'temporary') {
+      window.clearTimeout(closeTempDrugModal.timer);
       tempDrugTargetLocationId = locationId || 'temporary';
       const location = getLocation(tempDrugTargetLocationId);
       dom.tempDrugMeta.textContent = (location?.name || '目前位置') + '｜加入後可照一般藥品輸入數量與效期。';
       dom.tempSlotInput.value = '';
       dom.tempDrugNameInput.value = '';
+      dom.tempDrugModal.classList.remove('closing');
       dom.tempDrugModal.classList.add('show');
       syncSceneFocus();
       window.setTimeout(() => dom.tempSlotInput.focus(), 60);
     }
 
     function closeTempDrugModal() {
-      dom.tempDrugModal.classList.remove('show');
-      tempDrugTargetLocationId = '';
-      syncSceneFocus();
+      window.clearTimeout(closeTempDrugModal.timer);
+      if (!dom.tempDrugModal.classList.contains('show')) {
+        dom.tempDrugModal.classList.remove('closing');
+        tempDrugTargetLocationId = '';
+        syncSceneFocus();
+        return;
+      }
+      if (dom.tempDrugModal.classList.contains('closing')) return;
+      dom.tempDrugModal.classList.add('closing');
+      closeTempDrugModal.timer = window.setTimeout(() => {
+        dom.tempDrugModal.classList.remove('show', 'closing');
+        tempDrugTargetLocationId = '';
+        syncSceneFocus();
+      }, 240);
     }
 
     function addTemporaryDrug() {
@@ -21405,7 +21477,7 @@
       closeTempDrugModal();
       renderDrugStrip();
       renderLocationList();
-      openDrugModal(newIndex);
+      window.setTimeout(() => openDrugModal(newIndex), 250);
       showToast('已加入臨時藥品');
     }
 
@@ -22266,7 +22338,8 @@
         itemMasterScript.textContent = '\n' + JSON.stringify(itemMaster || {}, null, 2) + '\n';
       }
       doc.querySelector('#drugModal')?.classList.remove('show', 'closing');
-      doc.querySelector('#adminPanel')?.classList.remove('show');
+      doc.querySelector('#tempDrugModal')?.classList.remove('show', 'closing');
+      doc.querySelector('#adminPanel')?.classList.remove('show', 'closing');
       doc.querySelector('body')?.classList.remove('scene-focus', 'admin-focus', 'modal-open');
       const html = '<!doctype html>\n' + doc.outerHTML;
       downloadText(
@@ -22362,14 +22435,30 @@
     });
 
     function toggleAdminPanel() {
-      dom.adminPanel.classList.toggle('show');
+      if (dom.adminPanel.classList.contains('show') && !dom.adminPanel.classList.contains('closing')) {
+        closeAdminPanel();
+        return;
+      }
+      window.clearTimeout(closeAdminPanel.timer);
+      dom.adminPanel.classList.remove('closing');
+      dom.adminPanel.classList.add('show');
       renderAdmin();
       syncSceneFocus();
     }
 
     function closeAdminPanel() {
-      dom.adminPanel.classList.remove('show');
-      syncSceneFocus();
+      window.clearTimeout(closeAdminPanel.timer);
+      if (!dom.adminPanel.classList.contains('show')) {
+        dom.adminPanel.classList.remove('closing');
+        syncSceneFocus();
+        return;
+      }
+      if (dom.adminPanel.classList.contains('closing')) return;
+      dom.adminPanel.classList.add('closing');
+      closeAdminPanel.timer = window.setTimeout(() => {
+        dom.adminPanel.classList.remove('show', 'closing');
+        syncSceneFocus();
+      }, 240);
     }
 
     function setMobileActionsOpen(open) {
