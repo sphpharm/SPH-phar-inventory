@@ -20646,8 +20646,8 @@
         <h1 id="cabinetTitle">UD 調劑台 1 盤點</h1>
         <span id="saveStatus">離線模式，資料會儲存在這台裝置</span>
       </div>
-      <div class="retro-clock" aria-label="現在時間 23:59">
-        <span id="retroClockTime">23<span class="clock-colon">:</span>59</span>
+      <div class="retro-clock" aria-label="現在時間 00:09">
+        <span id="retroClockTime">00<span class="clock-colon">:</span>09</span>
       </div>
       <div class="cabinet-switcher">
         <select id="cabinetSelect" class="cabinet-switch" aria-label="切換調劑台">
@@ -21311,18 +21311,18 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       <div class="modal-header">
         <div>
           <h3 id="tempDrugTitle">新增臨時藥品</h3>
-          <p id="tempDrugMeta">加入後可照一般藥品輸入數量與效期。</p>
+          <p id="tempDrugMeta">層架 1｜加入後可照一般藥品輸入數量與效期。</p>
         </div>
         <button id="tempDrugCloseBtn" class="icon-action-btn" aria-label="關閉新增臨時藥品" title="關閉">×</button>
       </div>
       <div class="modal-body">
         <div class="field">
-          <label for="tempSlotInput">料位號</label>
+          <label for="tempSlotInput">料位號（必填）</label>
           <input id="tempSlotInput" autocomplete="off" placeholder="例如 TEMP-01">
         </div>
         <div class="field">
-          <label for="tempDrugNameInput">藥品名稱</label>
-          <input id="tempDrugNameInput" autocomplete="off" placeholder="輸入臨時要盤點的藥品">
+          <label for="tempDrugNameInput">藥品名稱（選填）</label>
+          <input id="tempDrugNameInput" autocomplete="off" placeholder="未填會以料位號建立臨時品項">
         </div>
       </div>
       <div class="modal-footer">
@@ -22270,16 +22270,32 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       }, 200);
     }
 
+    function autofillTempDrugName() {
+      const upperSlotNo = normalizeSlotNo(dom.tempSlotInput.value);
+      if (dom.tempSlotInput.value !== upperSlotNo) {
+        dom.tempSlotInput.value = upperSlotNo;
+      }
+      if (dom.tempDrugNameInput.value.trim()) return;
+      const masterItem = findItemMasterBySlot(upperSlotNo);
+      if (masterItem?.drugName) {
+        dom.tempDrugNameInput.value = masterItem.drugName;
+      }
+    }
+
     function addTemporaryDrug() {
       const location = getLocation(tempDrugTargetLocationId || currentLocationId || 'temporary');
       if (!location) return;
-      const drugName = dom.tempDrugNameInput.value.trim();
-      const slotNo = dom.tempSlotInput.value.trim() || ('TEMP-' + String(location.items.length + 1).padStart(2, '0'));
-      if (!drugName) {
-        showToast('請輸入藥品名稱');
-        dom.tempDrugNameInput.focus();
+      const slotNo = normalizeSlotNo(dom.tempSlotInput.value);
+      dom.tempSlotInput.value = slotNo;
+      if (!slotNo) {
+        showToast('請輸入料位號');
+        dom.tempSlotInput.focus();
         return;
       }
+      const masterItem = findItemMasterBySlot(slotNo);
+      const drugName = dom.tempDrugNameInput.value.trim()
+        || masterItem?.drugName
+        || ('臨時品項（' + slotNo + '）');
       location.items.push({ drugName, slotNo });
       const newIndex = location.items.length - 1;
       currentLocationId = location.id;
@@ -23213,6 +23229,16 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       return escapeHtml(value).replace(/`/g, '&#096;');
     }
 
+    function normalizeSlotNo(value) {
+      return String(value || '').trim().toUpperCase();
+    }
+
+    function findItemMasterBySlot(slotNo) {
+      const key = normalizeSlotNo(slotNo);
+      if (!key) return null;
+      return itemMaster[key] || Object.values(itemMaster || {}).find((item) => normalizeSlotNo(item?.slotNo) === key) || null;
+    }
+
     function showToast(message) {
       dom.toast.textContent = message;
       dom.toast.classList.add('show');
@@ -23491,8 +23517,13 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     dom.tempDrugNameInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') addTemporaryDrug();
     });
+    dom.tempSlotInput.addEventListener('input', autofillTempDrugName);
+    dom.tempSlotInput.addEventListener('change', autofillTempDrugName);
     dom.tempSlotInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') dom.tempDrugNameInput.focus();
+      if (event.key === 'Enter') {
+        autofillTempDrugName();
+        addTemporaryDrug();
+      }
     });
     dom.saveEntryBtn.addEventListener('click', saveDrugEntry);
     dom.deleteEntryBtn.addEventListener('click', deleteDrugEntry);
