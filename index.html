@@ -1121,7 +1121,9 @@
     .modal-body {
       padding: 16px;
       background: #EDEDEA;
-      overflow: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     .quantity-field {
