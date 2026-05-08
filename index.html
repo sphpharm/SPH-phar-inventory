@@ -333,6 +333,11 @@
       transition: opacity .34s ease;
     }
 
+    body.modal-open {
+      overflow: hidden;
+      touch-action: none;
+    }
+
     body.scene-focus .cabinet-panel,
     body.modal-open .cabinet-panel {
       filter: blur(2.2px) saturate(.94) brightness(1.01);
