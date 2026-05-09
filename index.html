@@ -1760,6 +1760,131 @@
       width: min(430px, 100%);
     }
 
+    .stale-data-modal {
+      width: min(430px, 100%);
+      background: #F2F1ED;
+      border: 1px solid rgba(190, 184, 174, .66);
+      border-radius: 20px;
+      box-shadow: 0 22px 52px rgba(39, 36, 30, .18);
+    }
+
+    .stale-data-backdrop {
+      z-index: 32;
+    }
+
+    .stale-data-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 18px 18px 12px;
+      background: #F7F6F2;
+    }
+
+    .stale-data-mark {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 auto;
+      border-radius: 10px;
+      background: #E7B77D;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .36);
+    }
+
+    .stale-data-header h3 {
+      margin: 0;
+      color: #34302B;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .stale-data-header p {
+      margin: 5px 0 0;
+      color: #746C62;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .stale-data-body {
+      display: grid;
+      gap: 10px;
+      padding: 12px 18px 16px;
+      background: #EAE9E4;
+    }
+
+    .stale-data-summary,
+    .stale-data-note,
+    .stale-data-fact {
+      border-radius: 12px;
+      background: #F7F6F2;
+      box-shadow: 0 6px 14px rgba(39, 36, 30, .045);
+    }
+
+    .stale-data-summary {
+      padding: 12px 13px;
+      color: #4F4942;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .stale-data-facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stale-data-fact {
+      padding: 11px 12px;
+    }
+
+    .stale-data-fact span {
+      display: block;
+      color: #81786D;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .stale-data-fact b {
+      display: block;
+      margin-top: 4px;
+      color: #3F3933;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .stale-data-note {
+      margin: 0;
+      padding: 11px 12px;
+      color: #675E54;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .stale-data-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.12fr;
+      gap: 9px;
+      padding: 14px 18px 18px;
+      background: #F7F6F2;
+    }
+
+    .stale-data-actions button {
+      min-height: 44px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .stale-data-actions .button-secondary {
+      color: #4F4942;
+      background: #E3E0D9;
+      border-color: transparent;
+    }
+
+    .stale-data-actions .stale-clear-btn {
+      color: #24180F;
+      background: #D99A55;
+      border-color: transparent;
+      box-shadow: 0 8px 18px rgba(163, 106, 57, .14);
+    }
+
     .not-found-btn {
       display: inline-flex;
       align-items: center;
@@ -2965,6 +3090,15 @@
         border-color: rgba(255, 255, 255, .90);
       }
 
+      .stale-data-modal {
+        border-radius: 20px;
+      }
+
+      .stale-data-facts,
+      .stale-data-actions {
+        grid-template-columns: 1fr;
+      }
+
       .drug-row {
         grid-template-columns: 1fr;
       }
@@ -3313,7 +3447,8 @@
     }
 
     html.dark-theme #drugModal .modal,
-    html.dark-theme #tempDrugModal .modal {
+    html.dark-theme #tempDrugModal .modal,
+    html.dark-theme #staleDataModal .modal {
       background: #1A1B18;
       border: 1px solid rgba(92, 88, 78, .74);
       box-shadow: 0 26px 58px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .05);
@@ -3334,6 +3469,53 @@
     html.dark-theme #tempDrugModal .modal-footer {
       background: #24251F;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045);
+    }
+
+    html.dark-theme .stale-data-header,
+    html.dark-theme .stale-data-actions {
+      background: #252620;
+    }
+
+    html.dark-theme .stale-data-header h3 {
+      color: #F3EEE4;
+    }
+
+    html.dark-theme .stale-data-header p,
+    html.dark-theme .stale-data-note,
+    html.dark-theme .stale-data-summary,
+    html.dark-theme .stale-data-fact span {
+      color: #B9B0A3;
+    }
+
+    html.dark-theme .stale-data-body {
+      background: #181916;
+    }
+
+    html.dark-theme .stale-data-summary,
+    html.dark-theme .stale-data-note,
+    html.dark-theme .stale-data-fact {
+      background: #22231F;
+      box-shadow: none;
+    }
+
+    html.dark-theme .stale-data-fact b {
+      color: #F0E8DB;
+    }
+
+    html.dark-theme .stale-data-mark {
+      background: #A97443;
+      box-shadow: inset 0 1px 0 rgba(255, 232, 196, .14);
+    }
+
+    html.dark-theme .stale-data-actions .button-secondary {
+      color: #E9E1D4;
+      background: #34352F;
+    }
+
+    html.dark-theme .stale-data-actions .stale-clear-btn {
+      color: #24180F;
+      background: #D99A55;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, .22);
     }
 
     html.dark-theme .sheet-handle {
@@ -22600,6 +22782,36 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     </div>
   </div>
 
+  <div id="staleDataModal" class="modal-backdrop stale-data-backdrop" role="dialog" aria-modal="true" aria-labelledby="staleDataTitle">
+    <div class="modal stale-data-modal">
+      <div class="stale-data-header">
+        <span class="stale-data-mark" aria-hidden="true"></span>
+        <div>
+          <h3 id="staleDataTitle">偵測到舊盤點資料</h3>
+          <p>這台裝置仍保留上次盤點紀錄，建議先確認是否清除。</p>
+        </div>
+      </div>
+      <div class="stale-data-body">
+        <div id="staleDataSummary" class="stale-data-summary"></div>
+        <div class="stale-data-facts">
+          <div class="stale-data-fact">
+            <span>最舊存檔</span>
+            <b id="staleDataOldest">--</b>
+          </div>
+          <div class="stale-data-fact">
+            <span>有資料調劑台</span>
+            <b id="staleDataCount">--</b>
+          </div>
+        </div>
+        <p class="stale-data-note">清除只會刪除數量、效期、找不到庫存狀態，不會影響藥品位置設定。</p>
+      </div>
+      <div class="stale-data-actions">
+        <button id="staleDataKeepBtn" class="button-secondary" type="button">保留資料</button>
+        <button id="staleDataClearBtn" class="stale-clear-btn" type="button">清除舊資料</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite">已建立 8 個UD調劑台</div>
 
   <div id="searchDock" class="search-dock">
@@ -22659,6 +22871,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     let cabinetStateRefreshId = 0;
     let pageScrollLockY = 0;
     let staleInventoryPrompted = false;
+    let staleInventoryPromptResolve = null;
 
     const $ = (selector) => document.querySelector(selector);
     const dom = {
@@ -22749,6 +22962,12 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       tempDrugCloseBtn: $('#tempDrugCloseBtn'),
       tempDrugCancelBtn: $('#tempDrugCancelBtn'),
       tempDrugAddBtn: $('#tempDrugAddBtn'),
+      staleDataModal: $('#staleDataModal'),
+      staleDataSummary: $('#staleDataSummary'),
+      staleDataOldest: $('#staleDataOldest'),
+      staleDataCount: $('#staleDataCount'),
+      staleDataKeepBtn: $('#staleDataKeepBtn'),
+      staleDataClearBtn: $('#staleDataClearBtn'),
       toast: $('#toast')
     };
 
@@ -23103,6 +23322,42 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       return staleRecords;
     }
 
+    function closeStaleInventoryPrompt(shouldClear) {
+      if (dom.staleDataModal.classList.contains('closing')) return;
+      if (!dom.staleDataModal.classList.contains('show')) {
+        staleInventoryPromptResolve?.(shouldClear);
+        staleInventoryPromptResolve = null;
+        return;
+      }
+      dom.staleDataModal.classList.add('closing');
+      syncSceneFocus();
+      window.setTimeout(() => {
+        dom.staleDataModal.classList.remove('show', 'closing');
+        syncSceneFocus();
+        staleInventoryPromptResolve?.(shouldClear);
+        staleInventoryPromptResolve = null;
+      }, 190);
+    }
+
+    function openStaleInventoryPrompt(staleRecords, oldestRecord) {
+      const names = staleRecords
+        .slice(0, 4)
+        .map((record) => record.cabinet.cabinetName)
+        .join('、');
+      const extra = staleRecords.length > 4 ? ' 等 ' + staleRecords.length + ' 台' : '';
+      const oldestText = oldestRecord ? formatDateOnly(oldestRecord.savedAt) : '無日期紀錄';
+      dom.staleDataSummary.textContent = '涉及調劑台：' + names + extra;
+      dom.staleDataOldest.textContent = oldestText;
+      dom.staleDataCount.textContent = staleRecords.length + ' 台';
+      dom.staleDataModal.classList.remove('closing');
+      dom.staleDataModal.classList.add('show');
+      syncSceneFocus();
+      window.setTimeout(() => dom.staleDataKeepBtn.focus(), 80);
+      return new Promise((resolve) => {
+        staleInventoryPromptResolve = resolve;
+      });
+    }
+
     async function maybePromptClearStaleInventoryData() {
       if (staleInventoryPrompted) return;
       staleInventoryPrompted = true;
@@ -23114,19 +23369,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
         if (!record.savedDate) return record;
         return record.savedDate < oldest.savedDate ? record : oldest;
       }, null);
-      const names = staleRecords
-        .slice(0, 4)
-        .map((record) => record.cabinet.cabinetName)
-        .join('、');
-      const extra = staleRecords.length > 4 ? ' 等 ' + staleRecords.length + ' 台' : '';
-      const oldestText = oldestRecord ? formatDateOnly(oldestRecord.savedAt) : '無日期紀錄';
-      const shouldClear = confirm(
-        '偵測到這台裝置仍留有上次盤點資料，且最後存檔已超過 2 個月。\n\n'
-        + '涉及調劑台：' + names + extra + '\n'
-        + '最舊存檔：' + oldestText + '\n\n'
-        + '是否先清除舊資料，再開始本次盤點？\n'
-        + '按「取消」會保留目前資料。'
-      );
+      const shouldClear = await openStaleInventoryPrompt(staleRecords, oldestRecord);
       if (!shouldClear) return;
       clearInventoryDataNow('已清除超過 2 個月的舊盤點資料');
     }
@@ -23300,7 +23543,9 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       const modalOpen = dom.modal.classList.contains('show')
         || dom.modal.classList.contains('closing')
         || dom.tempDrugModal.classList.contains('show')
-        || dom.tempDrugModal.classList.contains('closing');
+        || dom.tempDrugModal.classList.contains('closing')
+        || dom.staleDataModal.classList.contains('show')
+        || dom.staleDataModal.classList.contains('closing');
       const hasFloatingCard = Boolean(currentLocationId)
         || cabinetPickerOpen
         || adminOpen
@@ -24813,6 +25058,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       }
       doc.querySelector('#drugModal')?.classList.remove('show', 'closing');
       doc.querySelector('#tempDrugModal')?.classList.remove('show', 'closing');
+      doc.querySelector('#staleDataModal')?.classList.remove('show', 'closing');
       doc.querySelector('#adminPanel')?.classList.remove('show', 'closing');
       doc.querySelector('#cabinetPicker')?.classList.remove('is-open', 'closing');
       doc.querySelector('body')?.classList.remove('scene-focus', 'admin-focus', 'modal-open', 'scroll-locked');
@@ -25181,6 +25427,8 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     dom.tempDrugModal.addEventListener('click', (event) => {
       if (event.target === dom.tempDrugModal) closeTempDrugModal();
     });
+    dom.staleDataKeepBtn.addEventListener('click', () => closeStaleInventoryPrompt(false));
+    dom.staleDataClearBtn.addEventListener('click', () => closeStaleInventoryPrompt(true));
     dom.tempDrugNameInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') addTemporaryDrug();
     });
@@ -25222,6 +25470,8 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
         closeDrugModal();
       } else if (event.key === 'Escape' && dom.tempDrugModal.classList.contains('show')) {
         closeTempDrugModal();
+      } else if (event.key === 'Escape' && dom.staleDataModal.classList.contains('show')) {
+        closeStaleInventoryPrompt(false);
       } else if (event.key === 'Escape' && dom.searchDock.classList.contains('is-open')) {
         closeSearch();
       } else if (event.key === 'Escape' && dom.adminPanel.classList.contains('show')) {
