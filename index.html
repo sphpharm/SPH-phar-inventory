@@ -4,6 +4,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>智慧藥櫃離線盤點</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    (() => {
+      try {
+        if (localStorage.getItem('offline-med-cabinet-v1:theme') === 'dark') {
+          document.documentElement.classList.add('dark-theme');
+        }
+      } catch {
+        // Theme preference is optional; keep the default light theme if storage is unavailable.
+      }
+    })();
+  </script>
   <style>
     :root {
       --bg: #E9E9E7;
@@ -200,12 +211,226 @@
       left: 50%;
       top: 50%;
       width: min(260px, 34vw);
-      transform: translate(-50%, -50%);
+      margin-left: -130px;
+      margin-top: -16px;
+      transform: none;
       z-index: 1;
     }
 
     .cabinet-switcher .cabinet-switch {
       width: 100%;
+    }
+
+    .cabinet-native-select {
+      display: none;
+    }
+
+    .cabinet-picker {
+      position: relative;
+      width: 100%;
+    }
+
+    .cabinet-picker-btn {
+      width: 100%;
+      height: 32px;
+      min-height: 32px;
+      padding: 0 8px 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: #565149;
+      background: #EEECE7;
+      border: 1px solid rgba(183, 177, 166, .76);
+      border-radius: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .88), 0 8px 18px rgba(17, 17, 17, .06);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .cabinet-picker-btn:hover,
+    .cabinet-picker-btn:active {
+      color: #4E4942;
+      background: #E8E5DF;
+    }
+
+    .cabinet-picker-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cabinet-picker-mark {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      color: #8A8178;
+      transition: transform .18s ease;
+    }
+
+    .cabinet-picker.is-open .cabinet-picker-mark {
+      transform: rotate(180deg);
+    }
+
+    .cabinet-picker-menu {
+      position: fixed;
+      left: max(12px, calc((100vw - 560px) / 2));
+      right: max(12px, calc((100vw - 560px) / 2));
+      top: 70px;
+      z-index: 28;
+      width: auto;
+      max-height: min(420px, calc(100dvh - 92px));
+      padding: 8px;
+      overflow-y: auto;
+      visibility: hidden;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-10px) scale(.965);
+      transform-origin: top center;
+      color: #433E38;
+      background: rgba(246, 245, 242, .96);
+      border: 1px solid rgba(190, 184, 174, .70);
+      border-radius: 16px;
+      box-shadow: 0 18px 34px rgba(45, 39, 32, .16), inset 0 1px 0 rgba(255, 255, 255, .88);
+      backdrop-filter: blur(14px);
+    }
+
+    .cabinet-picker.is-open .cabinet-picker-menu {
+      visibility: visible;
+      pointer-events: auto;
+      opacity: 1;
+      animation: cabinetPickerPop .30s cubic-bezier(.18, .98, .24, 1.08) both;
+    }
+
+    .cabinet-picker.closing .cabinet-picker-menu {
+      visibility: visible;
+      pointer-events: none;
+      animation: cabinetPickerDismiss .20s cubic-bezier(.34, .02, .32, 1) both;
+    }
+
+    .cabinet-option {
+      width: 100%;
+      min-height: 48px;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 6px 12px;
+      color: #4D4841;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      box-shadow: none;
+      text-align: left;
+    }
+
+    .cabinet-option:hover {
+      color: #3F3932;
+      background: #EDEAE4;
+    }
+
+    .cabinet-option:active {
+      transform: translateY(1px);
+    }
+
+    .cabinet-option + .cabinet-option {
+      margin-top: 3px;
+    }
+
+    .cabinet-option-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      line-height: 1.25;
+      font-weight: 720;
+    }
+
+    .cabinet-option-status {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex: 0 0 auto;
+      min-height: 22px;
+      padding: 3px 10px 3px 18px;
+      color: #847A70;
+      background: #E8E5DF;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 720;
+      line-height: 1;
+      text-align: center;
+      text-indent: 3px;
+      white-space: nowrap;
+    }
+
+    .cabinet-option-status::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #C7C0B6;
+      transform: translateY(-50%);
+    }
+
+    .cabinet-option.has-saved .cabinet-option-status {
+      color: #8E4F18;
+      background: #F4E0C4;
+    }
+
+    .cabinet-option.has-saved .cabinet-option-status::before {
+      background: #E08A30;
+      box-shadow: 0 0 0 3px rgba(224, 138, 48, .14);
+    }
+
+    .cabinet-option.is-current {
+      color: #4A443D;
+      background: #E4E0D8;
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .cabinet-option.is-current:hover {
+      background: #DED9D0;
+    }
+
+    .cabinet-option.is-current .cabinet-option-status {
+      color: #675E54;
+      background: #D4CEC3;
+    }
+
+    @keyframes cabinetPickerPop {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(.965);
+      }
+      72% {
+        opacity: 1;
+        transform: translateY(2px) scale(1.006);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes cabinetPickerDismiss {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-8px) scale(.975);
+      }
     }
 
     .topbar-right {
@@ -220,56 +445,115 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0;
-      width: 30px;
-      height: 24px;
-      padding: 0;
-      color: #67635d;
-      background: #E2E2DE;
+      gap: 6px;
+      width: clamp(104px, 14vw, 132px);
+      height: 32px;
+      padding: 0 9px;
+      color: #5E5146;
+      background: #E7E3DD;
       border: 1px solid rgba(255, 255, 255, .74);
-      border-radius: 11px;
+      border-radius: 999px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .86), 0 8px 18px rgba(17, 17, 17, .07);
       font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .08em;
+      font-size: 11.5px;
+      font-weight: 760;
+      letter-spacing: 0;
       white-space: nowrap;
     }
 
-    .save-lamp {
-      width: 8px;
-      height: 8px;
+    .save-led {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
       border-radius: 999px;
-      background: #D98935;
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, .58), 0 0 0 2px rgba(217, 137, 53, .08), 0 0 7px rgba(217, 137, 53, .24);
-      opacity: .74;
+      background: #D28B39;
+      box-shadow: 0 0 0 1px rgba(126, 77, 32, .20), 0 0 5px rgba(217, 137, 53, .22);
+      opacity: .68;
       transform: scale(1);
     }
 
-    .save-monitor.is-saving .save-lamp {
-      animation: saveLampPulse 880ms steps(1, end) 1;
+    .save-time {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding-left: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    @keyframes saveLampPulse {
+    .theme-toggle-btn {
+      width: 32px;
+      min-width: 32px;
+      height: 32px;
+      min-height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #5E5146;
+      background: #E7E3DD;
+      border: 1px solid rgba(255, 255, 255, .74);
+      border-radius: 999px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .86), 0 8px 18px rgba(17, 17, 17, .07);
+    }
+
+    .theme-toggle-btn:hover {
+      color: #332820;
+      background: #DDDAD3;
+    }
+
+    .theme-toggle-btn .theme-icon {
+      width: 17px;
+      height: 17px;
+      display: block;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .theme-toggle-btn .theme-icon-sun {
+      display: none;
+    }
+
+    html.dark-theme .theme-toggle-btn .theme-icon-moon {
+      display: none;
+    }
+
+    html.dark-theme .theme-toggle-btn .theme-icon-sun {
+      display: block;
+    }
+
+    .save-monitor.is-saving .save-led {
+      animation: saveLedRealistic 1.18s steps(1, end) 1;
+    }
+
+    @keyframes saveLedRealistic {
       0%, 100% {
-        opacity: .74;
+        background: #D28B39;
+        box-shadow: 0 0 0 1px rgba(126, 77, 32, .20), 0 0 5px rgba(217, 137, 53, .22);
+        opacity: .68;
         transform: scale(1);
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, .58), 0 0 0 2px rgba(217, 137, 53, .08), 0 0 7px rgba(217, 137, 53, .24);
       }
-      8%, 21%, 58% {
-        opacity: .30;
-        transform: scale(.88);
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, .30), 0 0 0 1px rgba(217, 137, 53, .04), 0 0 3px rgba(217, 137, 53, .10);
+      7%, 13% {
+        background: #F5B05D;
+        box-shadow: 0 0 0 1px rgba(180, 97, 30, .35), 0 0 9px rgba(242, 140, 40, .62);
+        opacity: 1;
+        transform: scale(1.18);
       }
-      13%, 30% {
-        opacity: .96;
-        transform: scale(1.22);
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, .72), 0 0 0 4px rgba(217, 137, 53, .12), 0 0 13px rgba(217, 137, 53, .46);
+      17%, 21%, 25%, 30%, 33%, 37%, 40%, 44%, 47%, 50%, 54%, 57%, 61%, 64%, 68%, 71%, 75%, 79%, 83%, 87%, 91% {
+        background: #7B4A22;
+        box-shadow: 0 0 0 1px rgba(126, 77, 32, .14), 0 0 1px rgba(217, 137, 53, .08);
+        opacity: .34;
+        transform: scale(.92);
       }
-      68% {
-        opacity: .90;
-        transform: scale(1.08);
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, .66), 0 0 0 3px rgba(217, 137, 53, .09), 0 0 10px rgba(217, 137, 53, .32);
+      19%, 23%, 27%, 29%, 35%, 39%, 42%, 46%, 49%, 52%, 56%, 60%, 63%, 66%, 70%, 73%, 77%, 81%, 85%, 89%, 93% {
+        background: #ECA04B;
+        box-shadow: 0 0 0 1px rgba(180, 97, 30, .28), 0 0 6px rgba(242, 140, 40, .45);
+        opacity: .88;
+        transform: scale(1.07);
+      }
+      96% {
+        background: #D28B39;
+        box-shadow: 0 0 0 1px rgba(126, 77, 32, .18), 0 0 4px rgba(217, 137, 53, .18);
+        opacity: .58;
+        transform: scale(.98);
       }
     }
 
@@ -281,12 +565,20 @@
     }
 
     .cabinet-switch {
-      min-width: 170px;
-      min-height: 42px;
-      border-color: var(--line-strong);
-      background: #F8F8F6;
-      font-weight: 800;
-      box-shadow: 0 8px 18px rgba(17, 17, 17, .055), inset 0 1px 0 rgba(255, 255, 255, .72);
+      min-width: 0;
+      height: 32px;
+      min-height: 32px;
+      padding-left: 12px;
+      padding-right: 32px;
+      color: #565149;
+      background: #EEECE7;
+      border: 1px solid rgba(183, 177, 166, .76);
+      border-radius: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .88), 0 8px 18px rgba(17, 17, 17, .06);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+      text-shadow: none;
     }
 
     .mobile-actions {
@@ -331,11 +623,6 @@
       background: rgba(244, 244, 242, .16);
       opacity: 0;
       transition: opacity .34s ease;
-    }
-
-    body.modal-open {
-      overflow: hidden;
-      touch-action: none;
     }
 
     body.scene-focus .cabinet-panel,
@@ -572,10 +859,10 @@
 
     .drug-card.done {
       padding-right: 44px;
-      border-color: rgba(163, 106, 57, .62);
-      background: #5E5B55;
-      color: #F4F4F2;
-      box-shadow: 0 14px 30px rgba(45, 44, 40, .22), 0 8px 18px rgba(17, 17, 17, .085);
+      color: #3B342E;
+      background: #F2EEE7;
+      border-color: rgba(163, 106, 57, .52);
+      box-shadow: 0 4px 12px rgba(39, 36, 30, .055);
     }
 
     .drug-card.done::after {
@@ -588,35 +875,76 @@
       justify-content: center;
       width: 24px;
       height: 24px;
-      color: #F7F1EA;
-      background: rgba(207, 132, 56, .92);
-      border: 1px solid rgba(255, 219, 174, .28);
+      color: #FFF7EF;
+      background: #A36A39;
+      border: 1px solid rgba(255, 230, 199, .42);
       border-radius: 999px;
-      box-shadow: 0 7px 16px rgba(207, 132, 56, .22);
+      box-shadow: 0 5px 13px rgba(163, 106, 57, .22);
       font-size: 16px;
       font-weight: 860;
       transform: translateY(-50%);
     }
 
     .drug-card.done .slot-badge {
-      color: #FFF7EF;
-      background: rgba(163, 106, 57, .82);
-      border-color: rgba(255, 219, 174, .18);
+      color: #FFF8EF;
+      background: #A36A39;
+      border-color: rgba(255, 230, 199, .20);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
     }
 
     .drug-card.done .drug-meta {
-      color: rgba(232, 231, 226, .78);
+      color: rgba(59, 52, 46, .68);
     }
 
     .drug-card.done .status-pill {
-      color: #2E2119;
-      background: rgba(235, 166, 83, .94);
+      color: #31261E;
+      background: #E7B77D;
     }
 
     .drug-card.done .status-pill.not-found {
-      color: #F7F1EA;
-      background: rgba(38, 29, 23, .48);
+      color: #FFF8EF;
+      background: #4F4942;
+    }
+
+    .drug-card.partial {
+      padding-right: 44px;
+      color: #3B342E;
+      background: #F2EEE7;
+      border-color: rgba(184, 68, 61, .45);
+      box-shadow: 0 4px 12px rgba(39, 36, 30, .055);
+    }
+
+    .drug-card-alert {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      width: 28px;
+      height: 28px;
+      color: #B8443D;
+      line-height: 1;
+      transform: translateY(-50%);
+    }
+
+    .drug-card-alert svg {
+      width: 28px;
+      height: 28px;
+      display: block;
+    }
+
+    .drug-card.partial .slot-badge {
+      color: #FFF8EF;
+      background: #A36A39;
+      border-color: rgba(255, 230, 199, .20);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+    }
+
+    .drug-card.partial .drug-meta {
+      color: rgba(59, 52, 46, .68);
+    }
+
+    .drug-card.partial .status-pill {
+      color: #571F1B;
+      background: #F0C9C3;
     }
 
     .add-drug-card {
@@ -775,6 +1103,26 @@
       font-weight: 700;
     }
 
+    .field-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .expiry-warning {
+      flex: 0 0 auto;
+      padding: 2px 8px;
+      color: #9B342E;
+      background: #F7DEDA;
+      border: 1px solid rgba(184, 68, 61, .24);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 760;
+      line-height: 1.55;
+    }
+
     input,
     textarea,
     select {
@@ -888,10 +1236,13 @@
     .status-pill {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       min-height: 26px;
       border-radius: 999px;
       padding: 2px 9px;
       font-size: 12px;
+      line-height: 1;
+      text-align: center;
       color: var(--muted);
       background: #E1E1DD;
       white-space: nowrap;
@@ -960,6 +1311,14 @@
       border-bottom: 0;
     }
 
+    #drugModal .modal-body {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+
     .modal-backdrop.show .modal {
       animation: cardPopIn .34s cubic-bezier(.18, .98, .24, 1.12) both;
     }
@@ -976,6 +1335,14 @@
     #drugModal.closing .modal {
       transform-origin: center bottom;
       animation: inventorySheetDismiss .21s cubic-bezier(.34, .02, .32, 1) both;
+    }
+
+    #tempDrugModal.show .modal {
+      animation: cardPopIn .34s cubic-bezier(.18, .98, .24, 1.12) both;
+    }
+
+    #tempDrugModal.closing .modal {
+      animation: tempDrugCardDismiss .24s cubic-bezier(.34, .02, .32, 1) both;
     }
 
     @keyframes cardPopIn {
@@ -1068,6 +1435,21 @@
       }
     }
 
+    @keyframes tempDrugCardDismiss {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      34% {
+        opacity: .96;
+        transform: translateY(-2px) scale(1.008);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(28px) scale(.965);
+      }
+    }
+
     @keyframes inventorySheetPop {
       0% {
         opacity: .72;
@@ -1126,9 +1508,7 @@
     .modal-body {
       padding: 16px;
       background: #EDEDEA;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
+      overflow: hidden;
     }
 
     .quantity-field {
@@ -1162,11 +1542,23 @@
       appearance: none;
     }
 
+    #qtyInput {
+      font-weight: 780;
+      font-variant-numeric: tabular-nums;
+    }
+
     #expiryInput:focus,
     #expiryInput:focus-visible {
       outline: none;
       border-color: rgba(163, 106, 57, .54);
       box-shadow: inset 0 0 0 1px rgba(163, 106, 57, .20), 0 0 0 3px rgba(163, 106, 57, .10);
+    }
+
+    .expiry-field.expiry-near #expiryInput {
+      color: #5C2B28;
+      background: #FFF6F4;
+      border-color: rgba(184, 68, 61, .48);
+      box-shadow: inset 0 0 0 1px rgba(184, 68, 61, .12), 0 0 0 3px rgba(184, 68, 61, .06);
     }
 
     .expiry-control {
@@ -1182,6 +1574,11 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 8px;
       margin-top: 8px;
+      padding: 8px;
+      background: #E6E6E2;
+      border: 1px solid #D5D5D1;
+      border-radius: 16px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .68);
     }
 
     .calc button {
@@ -1189,6 +1586,8 @@
       color: var(--ink);
       background: #F4F4F2;
       border: 1px solid var(--line);
+      border-radius: 13px;
+      box-shadow: 0 6px 14px rgba(17, 17, 17, .06);
       font-weight: 700;
       touch-action: manipulation;
       -webkit-user-select: none;
@@ -1202,6 +1601,21 @@
       background: #e5e2dc;
     }
 
+    .calc button[data-key="*"],
+    .calc button[data-key="-"],
+    .calc button[data-key="+"] {
+      color: #31261E;
+      background: #E7B77D;
+      border-color: rgba(163, 106, 57, .30);
+      box-shadow: 0 5px 12px rgba(163, 106, 57, .12);
+    }
+
+    .calc button[data-key="*"]:hover,
+    .calc button[data-key="-"]:hover,
+    .calc button[data-key="+"]:hover {
+      background: #EBC28F;
+    }
+
     .calc .wide {
       grid-column: span 2;
     }
@@ -1212,6 +1626,11 @@
       justify-content: space-between;
       gap: 10px;
       margin-top: 10px;
+      padding: 8px 10px;
+      background: #F7F7F5;
+      border: 1px solid rgba(213, 213, 209, .9);
+      border-radius: 14px;
+      box-shadow: 0 6px 14px rgba(17, 17, 17, .045);
     }
 
     .calc-total {
@@ -1326,6 +1745,17 @@
       border-radius: 0 0 var(--radius) var(--radius);
     }
 
+    #drugModal .modal-footer button {
+      display: inline-flex;
+      align-items: center;
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 44px;
+      padding: 0 10px;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
     .temp-drug-modal {
       width: min(430px, 100%);
     }
@@ -1344,15 +1774,21 @@
     }
 
     .not-found-icon {
-      min-width: 50px;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       color: #302f2d;
       flex: 0 0 auto;
-      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-      font-size: 15px;
-      font-weight: 800;
       line-height: 1;
-      letter-spacing: 0;
-      white-space: nowrap;
+    }
+
+    .not-found-icon svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+      overflow: visible;
     }
 
     .toast {
@@ -1753,44 +2189,112 @@
       }
 
       .retro-clock {
-        min-width: 70px;
+        min-width: 56px;
         flex: 0 0 auto;
-        height: 30px;
-        padding: 0 8px;
+        height: 28px;
+        padding: 0 6px;
         border-radius: 9px;
-        font-size: 14px;
-        letter-spacing: .06em;
+        font-size: 12px;
+        letter-spacing: .03em;
       }
 
       .cabinet-switcher {
-        width: clamp(118px, 38vw, 170px);
+        left: 72px;
+        width: clamp(112px, 35vw, 148px);
+        margin-left: 0;
+        margin-top: -14px;
+        transform: none;
+      }
+
+      .cabinet-picker-btn {
+        height: 28px;
+        min-height: 28px;
+        padding: 0 7px 0 8px;
+        border-radius: 9px;
+        font-size: 12px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .84), 0 7px 16px rgba(17, 17, 17, .06);
+      }
+
+      .cabinet-picker-mark {
+        width: 16px;
+        height: 16px;
+      }
+
+      .cabinet-picker-menu {
+        position: fixed;
+        left: 4px;
+        right: 4px;
+        top: 58px;
+        width: auto;
+        max-height: min(392px, calc(100dvh - 88px));
+        transform: translateY(-10px) scale(.965);
+        transform-origin: top left;
+      }
+
+      .cabinet-option {
+        min-height: 46px;
+        padding: 9px 10px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        justify-items: stretch;
+        gap: 8px;
+      }
+
+      .cabinet-option-name {
+        font-size: 13.5px;
+        line-height: 1.24;
+        white-space: nowrap;
+      }
+
+      .cabinet-option-status {
+        font-size: 10.5px;
+        padding-left: 17px;
+        padding-right: 9px;
       }
 
       .cabinet-switch {
         min-width: 0;
-        min-height: 34px;
-        padding: 7px 26px 7px 11px;
-        border-radius: 999px;
-        font-size: 13px;
+        height: 28px;
+        min-height: 28px;
+        padding: 0 24px 0 8px;
+        border-radius: 9px;
+        font-size: 12px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        box-shadow: 0 9px 18px rgba(17, 17, 17, .07), inset 0 1px 0 rgba(255, 255, 255, .78);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .84), 0 7px 16px rgba(17, 17, 17, .06);
       }
 
       .topbar-right {
         flex: 0 0 auto;
-        gap: 0;
+        gap: 5px;
+      }
+
+      .theme-toggle-btn {
+        width: 28px;
+        min-width: 28px;
+        height: 28px;
+        min-height: 28px;
+      }
+
+      .theme-toggle-btn .theme-icon {
+        width: 15px;
+        height: 15px;
       }
 
       .save-monitor {
-        gap: 0;
-        width: 28px;
-        height: 24px;
-        padding: 0;
+        gap: 5px;
+        width: clamp(86px, 26vw, 108px);
+        height: 28px;
+        padding: 0 7px;
         background: #DDDDD9;
-        border-radius: 11px;
+        border-radius: 999px;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72), 0 7px 16px rgba(17, 17, 17, .07);
+        font-size: 10.5px;
+      }
+
+      .save-led {
+        width: 8px;
+        height: 8px;
       }
 
       .top-actions {
@@ -1830,33 +2334,15 @@
         background: rgba(255, 255, 255, .92);
       }
 
-      .menu-icon,
-      .menu-icon::before,
-      .menu-icon::after {
-        display: block;
-        width: 20px;
-        height: 2px;
-        border-radius: 999px;
-        background: #5a5752;
-      }
-
       .menu-icon {
-        position: relative;
+        display: block;
+        width: 22px;
+        height: 22px;
+        color: #5a5752;
       }
 
-      .menu-icon::before,
-      .menu-icon::after {
-        content: "";
-        position: absolute;
-        left: 0;
-      }
-
-      .menu-icon::before {
-        top: -7px;
-      }
-
-      .menu-icon::after {
-        top: 7px;
+      .menu-icon path {
+        stroke: currentColor;
       }
 
       .mobile-actions-panel {
@@ -1898,6 +2384,10 @@
       }
 
       .mobile-actions-panel button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         min-height: 44px;
         border-radius: 999px;
         color: #fff;
@@ -1908,6 +2398,21 @@
         transform: translateY(8px);
         transition: opacity .22s ease, transform .32s cubic-bezier(.18, .98, .24, 1.12);
         transition-delay: 0s;
+      }
+
+      .mobile-actions-panel .action-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+      }
+
+      .mobile-actions-panel .action-icon svg {
+        display: block;
+        width: 20px;
+        height: 20px;
       }
 
       .mobile-actions.is-open .mobile-actions-panel button {
@@ -2122,30 +2627,65 @@
       .drug-card.done {
         padding-right: 42px;
         border-color: rgba(163, 106, 57, .66);
-        background: #5E5B55;
-        color: #F4F4F2;
-        box-shadow: 0 18px 36px rgba(45, 44, 40, .30), 0 12px 26px rgba(17, 17, 17, .13);
+        background: #F2EEE7;
+        color: #3B342E;
+        box-shadow: 0 4px 12px rgba(39, 36, 30, .055);
       }
 
       .drug-card.done .slot-badge {
-        color: #FFF7EF;
-        background: rgba(163, 106, 57, .82);
-        border-color: rgba(255, 219, 174, .18);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+        color: #FFF8EF;
+        background: #A36A39;
+        border-color: rgba(255, 230, 199, .20);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
       }
 
       .drug-card.done .drug-meta {
-        color: rgba(232, 231, 226, .78);
+        color: rgba(59, 52, 46, .68);
       }
 
       .drug-card.done .status-pill {
-        color: #2E2119;
-        background: rgba(235, 166, 83, .94);
+        color: #31261E;
+        background: #E7B77D;
       }
 
       .drug-card.done .status-pill.not-found {
-        color: #F7F1EA;
-        background: rgba(38, 29, 23, .48);
+        color: #FFF8EF;
+        background: #4F4942;
+      }
+
+      .drug-card.partial {
+        padding-right: 42px;
+        border-color: rgba(184, 68, 61, .48);
+        background: #F2EEE7;
+        color: #3B342E;
+        box-shadow: 0 4px 12px rgba(39, 36, 30, .055);
+      }
+
+      .drug-card-alert {
+        right: 11px;
+        width: 26px;
+        height: 26px;
+      }
+
+      .drug-card-alert svg {
+        width: 26px;
+        height: 26px;
+      }
+
+      .drug-card.partial .slot-badge {
+        color: #FFF8EF;
+        background: #A36A39;
+        border-color: rgba(255, 230, 199, .20);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+      }
+
+      .drug-card.partial .drug-meta {
+        color: rgba(59, 52, 46, .68);
+      }
+
+      .drug-card.partial .status-pill {
+        color: #571F1B;
+        background: #F0C9C3;
       }
 
       .drug-title {
@@ -2275,12 +2815,16 @@
       .modal-body {
         display: flex;
         flex-direction: column;
-        flex: 1 1 auto;
         min-height: 0;
         padding: 12px 14px 12px;
+        overflow: hidden;
+      }
+
+      #drugModal .modal-body {
         overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
       }
 
       .field {
@@ -2311,7 +2855,7 @@
         padding: 8px;
         background: #E6E6E2;
         border: 1px solid #D5D5D1;
-        border-radius: 20px;
+        border-radius: 16px;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, .68);
       }
 
@@ -2332,10 +2876,25 @@
       }
 
       .calc .op {
-        color: #111111;
-        background: #A8B9CC;
-        border-color: #A8B9CC;
-        box-shadow: 0 7px 16px rgba(168, 185, 204, .24);
+        color: #4A433B;
+        background: #E6DFD4;
+        border-color: #DAD5CC;
+        box-shadow: 0 5px 12px rgba(39, 36, 30, .075);
+      }
+
+      .calc button[data-key="*"],
+      .calc button[data-key="-"],
+      .calc button[data-key="+"] {
+        color: #31261E;
+        background: #E7B77D;
+        border-color: rgba(163, 106, 57, .30);
+        box-shadow: 0 7px 16px rgba(163, 106, 57, .16);
+      }
+
+      .calc button[data-key="*"]:hover,
+      .calc button[data-key="-"]:hover,
+      .calc button[data-key="+"]:hover {
+        background: #EBC28F;
       }
 
       .calc button[data-key="clear"] {
@@ -2417,6 +2976,650 @@
       .admin-row-actions {
         justify-content: flex-end;
       }
+    }
+
+    html.dark-theme {
+      color-scheme: dark;
+      --bg: #151615;
+      --panel: #20211F;
+      --ink: #F2F0EB;
+      --muted: #A9A39A;
+      --line: #3C3D39;
+      --line-strong: #505149;
+      --blue: #E7A34F;
+      --blue-dark: #F0B869;
+      --green: #A58B6D;
+      --amber: #E2A354;
+      --red: #B6534B;
+      --shadow: 0 22px 52px rgba(0, 0, 0, .34);
+    }
+
+    html.dark-theme body {
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 50% -10%, rgba(226, 163, 84, .10), transparent 34%),
+        linear-gradient(180deg, #1C1D1B 0%, #121312 100%);
+    }
+
+    html.dark-theme .topbar {
+      background: rgba(28, 29, 27, .92);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, .30);
+      backdrop-filter: blur(16px);
+    }
+
+    html.dark-theme .panel,
+    html.dark-theme .work-panel,
+    html.dark-theme .admin-panel,
+    html.dark-theme .modal,
+    html.dark-theme .search-panel,
+    html.dark-theme .cabinet-picker-menu {
+      color: var(--ink);
+      background: rgba(31, 32, 30, .96);
+      border-color: rgba(91, 88, 80, .78);
+      box-shadow: 0 22px 46px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .055);
+    }
+
+    html.dark-theme .cabinet-picker-btn,
+    html.dark-theme .save-monitor,
+    html.dark-theme .theme-toggle-btn {
+      color: #E8E0D2;
+      background: #2A2B28;
+      border-color: rgba(113, 109, 99, .68);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 18px rgba(0, 0, 0, .22);
+    }
+
+    html.dark-theme .cabinet-picker-btn:hover,
+    html.dark-theme .theme-toggle-btn:hover {
+      color: #F0A64A;
+      background: #32332F;
+    }
+
+    html.dark-theme .save-led {
+      background: #E09A46;
+      box-shadow: 0 0 0 1px rgba(240, 166, 74, .18), 0 0 5px rgba(240, 166, 74, .24);
+      opacity: .62;
+    }
+
+    html.dark-theme .button-secondary,
+    html.dark-theme .mobile-actions-panel .button-secondary,
+    html.dark-theme .modal-footer .button-secondary {
+      color: #EEE9DE;
+      background: #2A2B28;
+      border-color: rgba(94, 91, 83, .86);
+    }
+
+    html.dark-theme .button-secondary:hover,
+    html.dark-theme .mobile-actions-panel .button-secondary:hover {
+      background: #33342F;
+    }
+
+    html.dark-theme input,
+    html.dark-theme textarea,
+    html.dark-theme select,
+    html.dark-theme .modal input,
+    html.dark-theme .modal select,
+    html.dark-theme .modal textarea {
+      color: #F4F1EA;
+      background: #171816;
+      border-color: #4C4D46;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, .38);
+    }
+
+    html.dark-theme input::placeholder,
+    html.dark-theme textarea::placeholder {
+      color: #7D786F;
+    }
+
+    html.dark-theme .cabinet-panel {
+      background: rgba(32, 33, 31, .88);
+      border-color: rgba(84, 82, 75, .76);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, .30);
+    }
+
+    html.dark-theme body.scene-focus .cabinet-panel,
+    html.dark-theme body.modal-open .cabinet-panel {
+      filter: blur(2.2px) saturate(.84) brightness(.78);
+      opacity: .78;
+      box-shadow: 0 22px 54px rgba(0, 0, 0, .42);
+    }
+
+    html.dark-theme body.scene-focus .cabinet-panel::after,
+    html.dark-theme body.modal-open .cabinet-panel::after {
+      background: rgba(12, 13, 12, .26);
+    }
+
+    html.dark-theme .cabinet-line {
+      fill: rgba(52, 53, 49, .90);
+      stroke: #8B887F;
+    }
+
+    html.dark-theme .cabinet-detail {
+      stroke: #A39E93;
+    }
+
+    html.dark-theme .cabinet-soft {
+      fill: rgba(43, 44, 41, .86);
+      stroke: #918C82;
+    }
+
+    html.dark-theme .drawer-label,
+    html.dark-theme .shelf-label {
+      fill: #EAE4D7;
+    }
+
+    html.dark-theme .hit-area {
+      fill: rgba(240, 166, 74, .035);
+      stroke: rgba(232, 224, 210, .14);
+    }
+
+    html.dark-theme .hit-area:hover,
+    html.dark-theme .hit-area.active {
+      fill: rgba(240, 166, 74, .16);
+      stroke: rgba(240, 166, 74, .64);
+    }
+
+    html.dark-theme .hit-area.done {
+      fill: rgba(240, 166, 74, .18);
+      stroke: rgba(240, 166, 74, .82);
+    }
+
+    html.dark-theme .svg-progress-frame {
+      fill: rgba(29, 30, 28, .84);
+      stroke: rgba(175, 169, 157, .46);
+    }
+
+    html.dark-theme .svg-progress-seg {
+      fill: rgba(98, 95, 87, .52);
+    }
+
+    html.dark-theme .svg-progress-seg.done {
+      fill: rgba(232, 153, 68, .86);
+      filter: drop-shadow(0 0 2px rgba(232, 153, 68, .32));
+    }
+
+    html.dark-theme .section-head,
+    html.dark-theme .modal-header,
+    html.dark-theme .modal-body {
+      background: #20211F;
+    }
+
+    html.dark-theme .drug-strip {
+      background: #181917;
+    }
+
+    html.dark-theme .drug-card {
+      color: #F2F0EB;
+      background: #252622;
+      border-color: #484941;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, .26);
+    }
+
+    html.dark-theme .drug-card:hover {
+      background: #2C2D29;
+      border-color: #5A5A52;
+    }
+
+    html.dark-theme .drug-card.done {
+      color: #F1E8DC;
+      background: #2C2923;
+      border-color: rgba(221, 148, 68, .62);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .22);
+    }
+
+    html.dark-theme .drug-card.partial {
+      background: #2B2524;
+      border-color: rgba(190, 87, 80, .60);
+    }
+
+    html.dark-theme .drug-meta,
+    html.dark-theme .drug-card.done .drug-meta,
+    html.dark-theme .drug-card.partial .drug-meta,
+    html.dark-theme .section-head p,
+    html.dark-theme .modal-header p,
+    html.dark-theme .progress {
+      color: var(--muted);
+    }
+
+    html.dark-theme .add-drug-card {
+      color: #E5DDCF;
+      background: rgba(255, 255, 255, .03);
+      border-color: rgba(232, 224, 210, .22);
+    }
+
+    html.dark-theme .add-drug-card:hover {
+      background: rgba(240, 166, 74, .08);
+      border-color: rgba(240, 166, 74, .35);
+    }
+
+    html.dark-theme .status-pill,
+    html.dark-theme .cabinet-option-status {
+      color: #BDB5A8;
+      background: #33332E;
+    }
+
+    html.dark-theme .cabinet-option {
+      color: #EDE7DC;
+    }
+
+    html.dark-theme .cabinet-option:hover {
+      color: #FFF7EA;
+      background: #30312D;
+    }
+
+    html.dark-theme .cabinet-option.is-current {
+      color: #ECE5D8;
+      background: #363731;
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    html.dark-theme .cabinet-option.has-saved .cabinet-option-status {
+      color: #F4B66A;
+      background: rgba(231, 163, 79, .16);
+    }
+
+    html.dark-theme .cabinet-option.is-current .cabinet-option-status {
+      color: #D7CFC0;
+      background: #47463F;
+    }
+
+    html.dark-theme .calc,
+    html.dark-theme .calc-history,
+    html.dark-theme .search-results {
+      background: #1B1C19;
+      border-color: #45463F;
+    }
+
+    html.dark-theme .calc button {
+      color: #F2EFE7;
+      background: #2A2B27;
+      border-color: #44453E;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, .22);
+    }
+
+    html.dark-theme .calc button:hover {
+      background: #33342F;
+    }
+
+    html.dark-theme .calc button[data-key="*"],
+    html.dark-theme .calc button[data-key="-"],
+    html.dark-theme .calc button[data-key="+"] {
+      color: #EEDCC8;
+      background: #493628;
+      border-color: rgba(157, 111, 72, .46);
+    }
+
+    html.dark-theme .calc button[data-key="clear"] {
+      color: #E7DFD3;
+      background: #3A3B35;
+    }
+
+    html.dark-theme .calc button[data-key="="] {
+      color: #FFE5C3;
+      background: #6C482F;
+      border-color: rgba(183, 128, 79, .52);
+    }
+
+    html.dark-theme .calc-history-details summary,
+    html.dark-theme .calc-line,
+    html.dark-theme .search-result,
+    html.dark-theme .admin-card,
+    html.dark-theme .drug-row {
+      color: #EDE7DC;
+      background: #252622;
+      border-color: #44453E;
+    }
+
+    html.dark-theme .search-toggle,
+    html.dark-theme .mobile-actions-toggle {
+      color: #F1B760;
+      background: rgba(35, 36, 33, .94);
+      border-color: rgba(116, 111, 100, .70);
+      box-shadow: 0 18px 34px rgba(0, 0, 0, .32), inset 0 0 0 1px rgba(255, 255, 255, .055);
+    }
+
+    html.dark-theme .search-form,
+    html.dark-theme .search-scope label {
+      color: #EDE7DC;
+      background: #262723;
+      border-color: #45463F;
+    }
+
+    html.dark-theme .mobile-actions-panel button {
+      color: #17140F;
+      background: #E7A34F;
+      border-color: rgba(255, 206, 140, .42);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, .28);
+    }
+
+    html.dark-theme .mobile-actions-panel .button-danger,
+    html.dark-theme .button-danger {
+      color: #FFF4EF;
+      background: #A94E46;
+      border-color: rgba(189, 93, 83, .72);
+    }
+
+    html.dark-theme .toast {
+      color: #F4EFE7;
+      background: rgba(24, 25, 23, .96);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, .36);
+    }
+
+    html.dark-theme .expiry-field.expiry-near #expiryInput {
+      color: #FFDAD6;
+      background: #311E1D;
+      border-color: rgba(207, 92, 83, .72);
+      box-shadow: inset 0 0 0 1px rgba(207, 92, 83, .22), 0 0 0 3px rgba(207, 92, 83, .10);
+    }
+
+    html.dark-theme #drugModal .modal,
+    html.dark-theme #tempDrugModal .modal {
+      background: #1A1B18;
+      border: 1px solid rgba(92, 88, 78, .74);
+      box-shadow: 0 26px 58px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .05);
+    }
+
+    html.dark-theme #drugModal .modal-header,
+    html.dark-theme #tempDrugModal .modal-header {
+      background: #252620;
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .045);
+    }
+
+    html.dark-theme #drugModal .modal-body,
+    html.dark-theme #tempDrugModal .modal-body {
+      background: #181916;
+    }
+
+    html.dark-theme #drugModal .modal-footer,
+    html.dark-theme #tempDrugModal .modal-footer {
+      background: #24251F;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045);
+    }
+
+    html.dark-theme .sheet-handle {
+      background: rgba(232, 224, 210, .22);
+    }
+
+    html.dark-theme .modal-header h3 {
+      color: #F4EFE6;
+    }
+
+    html.dark-theme .modal-body .field label,
+    html.dark-theme .field label {
+      color: #C9C0B2;
+    }
+
+    html.dark-theme .field-label-row {
+      color: #C9C0B2;
+    }
+
+    html.dark-theme .expiry-warning {
+      color: #FFDAD6;
+      background: rgba(186, 78, 70, .20);
+      border-color: rgba(226, 111, 100, .35);
+    }
+
+    html.dark-theme .expiry-control {
+      background: #11120F;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, .20);
+    }
+
+    html.dark-theme #expiryInput,
+    html.dark-theme #qtyInput,
+    html.dark-theme #tempSlotInput,
+    html.dark-theme #tempDrugNameInput {
+      color: #F6F0E6;
+      background: #11120F;
+      border-color: rgba(98, 94, 84, .86);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -1px 0 rgba(0, 0, 0, .42);
+    }
+
+    html.dark-theme #qtyInput {
+      color: #F2B669;
+      background: #0F100E;
+      border-color: rgba(226, 163, 84, .42);
+      font-weight: 780;
+      box-shadow: inset 0 0 0 1px rgba(226, 163, 84, .10), 0 8px 18px rgba(0, 0, 0, .18);
+    }
+
+    html.dark-theme #expiryInput:focus,
+    html.dark-theme #qtyInput:focus,
+    html.dark-theme #tempSlotInput:focus,
+    html.dark-theme #tempDrugNameInput:focus {
+      border-color: rgba(240, 180, 105, .72);
+      box-shadow: inset 0 0 0 1px rgba(240, 180, 105, .22), 0 0 0 3px rgba(240, 180, 105, .12);
+    }
+
+    html.dark-theme #tempSlotInput::placeholder,
+    html.dark-theme #tempDrugNameInput::placeholder,
+    html.dark-theme #expiryInput::placeholder,
+    html.dark-theme #qtyInput::placeholder {
+      color: #777268;
+    }
+
+    html.dark-theme .qty-back {
+      color: #22160E;
+      background: #D99953;
+      border-color: rgba(244, 184, 112, .54);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, .24);
+    }
+
+    html.dark-theme .calc {
+      padding: 8px;
+      background: #141512;
+      border: 1px solid rgba(78, 76, 68, .78);
+      border-radius: 16px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+    }
+
+    html.dark-theme .calc button {
+      color: #ECE6DA;
+      background: #262722;
+      border-color: rgba(84, 82, 74, .86);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+
+    html.dark-theme .calc button:hover {
+      background: #30312B;
+    }
+
+    html.dark-theme .calc button[data-key="*"],
+    html.dark-theme .calc button[data-key="-"],
+    html.dark-theme .calc button[data-key="+"] {
+      color: #EEDCC8;
+      background: #493628;
+      border-color: rgba(157, 111, 72, .46);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 229, 196, .055);
+    }
+
+    html.dark-theme .calc button[data-key="*"]:hover,
+    html.dark-theme .calc button[data-key="-"]:hover,
+    html.dark-theme .calc button[data-key="+"]:hover {
+      color: #FFE8CD;
+      background: #563F2F;
+      border-color: rgba(181, 129, 82, .54);
+    }
+
+    html.dark-theme .calc button[data-key="clear"] {
+      color: #EFE8DB;
+      background: #3B3A33;
+      border-color: rgba(92, 90, 82, .90);
+    }
+
+    html.dark-theme .calc button[data-key="="] {
+      color: #FFE5C3;
+      background: #6C482F;
+      border-color: rgba(183, 128, 79, .52);
+      box-shadow: 0 9px 18px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 229, 196, .07);
+    }
+
+    html.dark-theme .calc button[data-key="="]:hover {
+      background: #795238;
+      border-color: rgba(199, 144, 91, .58);
+    }
+
+    html.dark-theme .calc-actions {
+      padding: 8px 10px;
+      background: #21221D;
+      border: 1px solid rgba(76, 74, 66, .82);
+      border-radius: 14px;
+    }
+
+    html.dark-theme .calc-total {
+      color: #F0B76C;
+    }
+
+    html.dark-theme .calc-add-btn {
+      color: #21150D;
+      background: #D89B55;
+      border-color: rgba(244, 190, 120, .46);
+    }
+
+    html.dark-theme .calc-history-details {
+      background: #1D1E1A;
+      border-color: rgba(76, 74, 66, .82);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, .22);
+    }
+
+    html.dark-theme .calc-history-details summary {
+      color: #EEE7D9;
+      background: #252620;
+    }
+
+    html.dark-theme .calc-history-toggle {
+      color: #F0B76C;
+      background: rgba(240, 183, 108, .14);
+    }
+
+    html.dark-theme .calc-latest {
+      color: #F2EDE2;
+    }
+
+    html.dark-theme .calc-line {
+      color: #EAE3D6;
+      background: #23241F;
+      border-color: rgba(76, 74, 66, .80);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .18);
+    }
+
+    html.dark-theme .calc-line-delete {
+      color: #F1E9DD;
+      background: #383931;
+      border-color: rgba(83, 81, 73, .92);
+    }
+
+    html.dark-theme .not-found-btn {
+      color: #EDE6D8;
+      background: #2A2B26;
+      border-color: rgba(88, 85, 76, .88);
+      box-shadow: 0 9px 18px rgba(0, 0, 0, .22);
+    }
+
+    html.dark-theme .not-found-btn:hover {
+      color: #FFF3E0;
+      background: #32332D;
+    }
+
+    html.dark-theme .not-found-icon {
+      color: #E7A34F;
+    }
+
+    html.dark-theme #deleteEntryBtn,
+    html.dark-theme #tempDrugCancelBtn {
+      color: #EAE3D6;
+      background: #2B2C27;
+      border-color: rgba(88, 85, 76, .88);
+    }
+
+    html.dark-theme #saveEntryBtn,
+    html.dark-theme #tempDrugAddBtn {
+      color: #21150D;
+      background: #E7A34F;
+      border-color: rgba(255, 204, 134, .56);
+      box-shadow: 0 11px 22px rgba(0, 0, 0, .28);
+    }
+
+    html.dark-theme #saveEntryBtn:hover,
+    html.dark-theme #tempDrugAddBtn:hover {
+      background: #F0B76C;
+    }
+
+    html.dark-theme .icon-action-btn {
+      color: #24160B;
+      background: #E7A34F;
+      border-color: rgba(255, 203, 132, .62);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .22);
+    }
+
+    html.dark-theme .top-actions button,
+    html.dark-theme .mobile-actions-panel button {
+      color: #ECE5D8;
+      background: #292A25;
+      border-color: rgba(82, 80, 72, .86);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+
+    html.dark-theme .top-actions button:hover,
+    html.dark-theme .mobile-actions-panel button:hover {
+      background: #32332D;
+    }
+
+    html.dark-theme .mobile-actions-panel {
+      background: rgba(29, 30, 27, .96);
+      border-color: rgba(86, 83, 74, .82);
+      box-shadow: 0 22px 46px rgba(0, 0, 0, .40), inset 0 1px 0 rgba(255, 255, 255, .05);
+    }
+
+    html.dark-theme .mobile-actions-panel button:first-child,
+    html.dark-theme .top-actions #shareCsvBtn {
+      color: #22160E;
+      background: #E7A34F;
+      border-color: rgba(255, 204, 134, .56);
+      box-shadow: 0 13px 26px rgba(0, 0, 0, .32), 0 0 0 1px rgba(255, 204, 134, .08);
+    }
+
+    html.dark-theme .mobile-actions-panel button:first-child:hover,
+    html.dark-theme .top-actions #shareCsvBtn:hover {
+      background: #F0B76C;
+    }
+
+    html.dark-theme .mobile-actions-panel .button-secondary,
+    html.dark-theme .top-actions .button-secondary {
+      color: #ECE5D8;
+      background: #292A25;
+      border-color: rgba(82, 80, 72, .86);
+    }
+
+    html.dark-theme .mobile-actions-panel .button-danger,
+    html.dark-theme .top-actions .button-danger,
+    html.dark-theme .button-danger {
+      color: #FBEDE8;
+      background: #743B35;
+      border-color: rgba(177, 84, 74, .68);
+    }
+
+    html.dark-theme .mobile-actions-panel .button-danger:hover,
+    html.dark-theme .top-actions .button-danger:hover,
+    html.dark-theme .button-danger:hover {
+      background: #85453E;
+    }
+
+    html.dark-theme .mobile-actions-panel .action-icon {
+      width: 24px;
+      height: 24px;
+      color: currentColor;
+      background: rgba(255, 255, 255, .07);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 999px;
+    }
+
+    html.dark-theme .mobile-actions-panel button:first-child .action-icon {
+      background: rgba(255, 255, 255, .22);
+      border-color: rgba(255, 255, 255, .20);
+    }
+
+    html.dark-theme .menu-icon {
+      color: #F1B760;
     }
   </style>
 </head>
@@ -20660,7 +21863,16 @@
         <span id="retroClockTime">00<span class="clock-colon">:</span>09</span>
       </div>
       <div class="cabinet-switcher">
-        <select id="cabinetSelect" class="cabinet-switch" aria-label="切換調劑台">
+        <div id="cabinetPicker" class="cabinet-picker">
+          <button id="cabinetPickerBtn" class="cabinet-picker-btn" type="button" aria-label="切換調劑台" aria-haspopup="listbox" aria-expanded="false">
+            <span id="cabinetPickerLabel" class="cabinet-picker-label">選擇調劑台</span>
+            <svg class="cabinet-picker-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+          <div id="cabinetPickerMenu" class="cabinet-picker-menu" role="listbox" aria-label="調劑台清單"></div>
+        </div>
+        <select id="cabinetSelect" class="cabinet-switch cabinet-native-select" aria-label="切換調劑台" tabindex="-1" aria-hidden="true">
         <option value="er-1">ER 調劑台 1</option>
       
         <option value="er-2">ER 調劑台 2</option>
@@ -20719,8 +21931,17 @@
       </select>
       </div>
       <div class="topbar-right">
+        <button id="themeToggleBtn" class="theme-toggle-btn" type="button" aria-label="切換深色模式" aria-pressed="false" title="深色模式">
+          <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M12 22q-4.12 0-7.06-2.94Q2 16.13 2 12q0-3.55 2.19-6.29Q6.38 2.98 9.75 2.25q.35-.08.63.19.27.26.22.64-.05.45-.07.9-.03.45-.03.92 0 3.58 2.51 6.09 2.52 2.51 6.09 2.51.48 0 .93-.03.45-.02.9-.07.38-.05.64.22.27.28.18.63-.72 3.37-3.46 5.56Q15.55 22 12 22Z"></path>
+          </svg>
+          <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M11 5V2h2v3h-2Zm0 17v-3h2v3h-2Zm8-9v-2h3v2h-3ZM2 13v-2h3v2H2Zm15.65-6.25-1.4-1.4 2.1-2.15 1.45 1.45-2.15 2.1ZM5.65 20.8 4.2 19.35l2.15-2.1 1.4 1.4-2.1 2.15Zm12.7 0-2.1-2.15 1.4-1.4 2.15 2.1-1.45 1.45ZM6.35 6.75 4.2 4.65 5.65 3.2l2.1 2.15-1.4 1.4ZM12 18q-2.5 0-4.25-1.75T6 12q0-2.5 1.75-4.25T12 6q2.5 0 4.25 1.75T18 12q0 2.5-1.75 4.25T12 18Zm0-2q1.65 0 2.83-1.17Q16 13.65 16 12t-1.17-2.83Q13.65 8 12 8T9.17 9.17Q8 10.35 8 12t1.17 2.83Q10.35 16 12 16Z"></path>
+          </svg>
+        </button>
         <div id="saveMonitor" class="save-monitor" aria-live="polite" aria-label="儲存狀態">
-          <span class="save-lamp" aria-hidden="true"></span>
+          <span class="save-led" aria-hidden="true"></span>
+          <span id="saveTimeText" class="save-time">尚未存檔</span>
         </div>
         <div class="top-actions">
           <button id="exportCsvBtn" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
@@ -20733,13 +21954,43 @@
 
     <div class="mobile-actions" id="mobileActions">
       <button id="mobileActionsToggle" class="mobile-actions-toggle" type="button" aria-label="開啟功能選單" aria-expanded="false">
-        <span class="menu-icon" aria-hidden="true"></span>
+        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 7h14M5 12h14M5 17h14" stroke-width="2.2" stroke-linecap="round"></path>
+        </svg>
       </button>
       <div class="mobile-actions-panel">
-        <button id="mobileShareCsvBtn" title="用手機分享盤點 CSV">分享 CSV</button>
-        <button id="mobileExportCsvBtn" class="button-secondary" title="匯出藥品名稱、數量、效期 CSV">匯出 CSV</button>
-        <button id="mobileClearInventoryBtn" class="button-danger" title="清除本機已儲存的盤點數量與效期">清除資料</button>
-        <button id="mobileAdminToggleBtn" class="button-secondary" title="切換後台設定">後台設定</button>
+        <button id="mobileShareCsvBtn" title="用手機分享盤點 CSV">
+          <span class="action-icon" aria-hidden="true">
+            <svg viewBox="0 -960 960 960" fill="currentColor">
+              <path d="M280-360v-240q0-33 23.5-56.5T360-680h326L583-783l57-57 200 200-200 200-57-56 103-104H360v240h-80Zm-80 240q-33 0-56.5-23.5T120-200v-600h80v600h480v-160h80v160q0 33-23.5 56.5T680-120H200Z"></path>
+            </svg>
+          </span>
+          <span>分享 CSV</span>
+        </button>
+        <button id="mobileExportCsvBtn" class="button-secondary" title="匯出藥品名稱、數量、效期 CSV">
+          <span class="action-icon" aria-hidden="true">
+            <svg viewBox="0 -960 960 960" fill="currentColor">
+              <path d="m480-240 160-160-56-56-64 64v-168h-80v168l-64-64-56 56 160 160ZM200-640v440h560v-440H200Zm0 520q-33 0-56.5-23.5T120-200v-499q0-14 4.5-27t13.5-24l50-61q11-14 27.5-21.5T250-840h460q18 0 34.5 7.5T772-811l50 61q9 11 13.5 24t4.5 27v499q0 33-23.5 56.5T760-120H200Zm16-600h528l-34-40H250l-34 40Zm264 300Z"></path>
+            </svg>
+          </span>
+          <span>匯出 CSV</span>
+        </button>
+        <button id="mobileAdminToggleBtn" class="button-secondary" title="切換後台設定">
+          <span class="action-icon" aria-hidden="true">
+            <svg viewBox="0 -960 960 960" fill="currentColor">
+              <path d="M440-520v-280h440v280H440ZM80-160v-280h400v280H80Zm0-360v-280h280v280H80Zm440-80h280v-120H520v120ZM160-240h240v-120H160v120Zm0-360h120v-120H160v120Zm360 0ZM400-360ZM280-600ZM680-80l-12-60q-12-5-22.5-10.5T624-164l-58 18-40-68 46-40q-2-13-2-26t2-26l-46-40 40-68 58 18q11-8 21.5-13.5T668-420l12-60h80l12 60q12 5 22.5 10.5T816-396l58-18 40 68-46 40q2 13 2 26t-2 26l46 40-40 68-58-18q-11 8-21.5 13.5T772-140l-12 60h-80Zm96.5-143.5Q800-247 800-280t-23.5-56.5Q753-360 720-360t-56.5 23.5Q640-313 640-280t23.5 56.5Q687-200 720-200t56.5-23.5Z"></path>
+            </svg>
+          </span>
+          <span>後台設定</span>
+        </button>
+        <button id="mobileClearInventoryBtn" class="button-danger" title="清除本機已儲存的盤點數量與效期">
+          <span class="action-icon" aria-hidden="true">
+            <svg viewBox="0 -960 960 960" fill="currentColor">
+              <path d="m376-300 104-104 104 104 56-56-104-104 104-104-56-56-104 104-104-104-56 56 104 104-104 104 56 56Zm-96 180q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520Zm-400 0v520-520Z"></path>
+            </svg>
+          </span>
+          <span>清除資料</span>
+        </button>
       </div>
     </div>
 
@@ -21262,8 +22513,11 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
         <button id="closeModalBtn" class="icon-action-btn" aria-label="關閉盤點輸入視窗" title="關閉">×</button>
       </div>
       <div class="modal-body">
-        <div class="field">
-          <label for="expiryInput">效期</label>
+        <div class="field expiry-field" id="expiryField">
+          <div class="field-label-row">
+            <label for="expiryInput">效期</label>
+            <span id="expiryWarning" class="expiry-warning" hidden>效期將近</span>
+          </div>
           <div class="expiry-control">
             <input id="expiryInput" type="text" inputmode="numeric" pattern="[0-9/]*" maxlength="8" autocomplete="off" enterkeyhint="done" placeholder="YY/MM/DD">
           </div>
@@ -21277,13 +22531,13 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
             </summary>
             <div id="calcHistoryList" class="calc-history" aria-label="數量計算明細"></div>
           </details>
-          <div class="qty-control">
-            <input id="qtyInput" inputmode="none" autocomplete="off" readonly="" placeholder="使用下方按鍵輸入或加總">
-            <button id="qtyBackBtn" class="qty-back" type="button" aria-label="刪除最後一個字">⌫</button>
-          </div>
           <div class="calc-actions">
             <span id="calcTotalLabel" class="calc-total">目前總量：0</span>
             <button id="calcAddLineBtn" class="calc-add-btn button-secondary" type="button">加入明細</button>
+          </div>
+          <div class="qty-control">
+            <input id="qtyInput" inputmode="none" autocomplete="off" readonly="" placeholder="使用下方按鍵輸入或加總">
+            <button id="qtyBackBtn" class="qty-back" type="button" aria-label="刪除最後一個字">⌫</button>
           </div>
           <div class="calc" aria-label="數量加總計算機">
             <button data-key="7">7</button>
@@ -21308,7 +22562,11 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       <div class="modal-footer">
         <button id="deleteEntryBtn" class="button-secondary">清除本筆</button>
         <button id="notFoundBtn" class="not-found-btn" type="button">
-          <span class="not-found-icon" aria-hidden="true">¯\_(ツ)_/¯</span>
+          <span class="not-found-icon" aria-hidden="true">
+            <svg viewBox="0 -960 960 960" fill="currentColor">
+              <path d="M200-120q-33 0-56.5-23.5T120-200v-160h80v160h160v80H200Zm560 0H600v-80h160v-160h80v160q0 33-23.5 56.5T760-120ZM120-760q0-33 23.5-56.5T200-840h160v80H200v160h-80v-160Zm720 0v160h-80v-160H600v-80h160q33 0 56.5 23.5T840-760ZM515.5-254.5Q530-269 530-290t-14.5-35.5Q501-340 480-340t-35.5 14.5Q430-311 430-290t14.5 35.5Q459-240 480-240t35.5-14.5ZM444-393h73q0-34 8-52t35-45q35-35 46.5-56.5T618-598q0-54-39-88t-99-34q-50 0-86 26t-52 74l66 27q7-26 26.5-42.5T480-652q29 0 46.5 15.5T544-595q0 20-9.5 37.5T502-521q-33 29-45.5 56T444-393Z"></path>
+            </svg>
+          </span>
           找不到庫存
         </button>
         <button id="saveEntryBtn">完成</button>
@@ -21369,6 +22627,8 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     const embeddedCabinetCollection = parseEmbeddedJson('cabinet-collection', []);
     const embeddedItemMaster = parseEmbeddedJson('item-master', {});
     const storagePrefix = 'offline-med-cabinet-v1:';
+    const themeStorageKey = storagePrefix + 'theme';
+    const staleInventoryThresholdMs = 60 * 24 * 60 * 60 * 1000;
     const fixedLocations = [
       { id: 'shelf-1', name: '層架 1' },
       { id: 'shelf-2', name: '層架 2' },
@@ -21395,12 +22655,18 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     let tempDrugTargetLocationId = '';
     let searchMatches = [];
     let entries = {};
+    let cabinetSaveStates = {};
+    let cabinetStateRefreshId = 0;
+    let pageScrollLockY = 0;
+    let staleInventoryPrompted = false;
 
     const $ = (selector) => document.querySelector(selector);
     const dom = {
       title: $('#cabinetTitle'),
       saveStatus: $('#saveStatus'),
       saveMonitor: $('#saveMonitor'),
+      saveTimeText: $('#saveTimeText'),
+      themeToggleBtn: $('#themeToggleBtn'),
       cabinetSvg: $('#cabinetSvg'),
       drawerDetails: $('#drawerDetails'),
       shelfDetails: $('#shelfDetails'),
@@ -21419,6 +22685,10 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       searchCloseBtn: $('#searchCloseBtn'),
       drugSearchInput: $('#drugSearchInput'),
       searchResults: $('#searchResults'),
+      cabinetPicker: $('#cabinetPicker'),
+      cabinetPickerBtn: $('#cabinetPickerBtn'),
+      cabinetPickerLabel: $('#cabinetPickerLabel'),
+      cabinetPickerMenu: $('#cabinetPickerMenu'),
       cabinetSelect: $('#cabinetSelect'),
       mobileCabinetSelect: $('#mobileCabinetSelect'),
       retroClockTime: $('#retroClockTime'),
@@ -21466,7 +22736,9 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       calcLatestLine: $('#calcLatestLine'),
       calcHistoryDetails: $('#calcHistoryDetails'),
       calcHistoryList: $('#calcHistoryList'),
+      expiryField: $('#expiryField'),
       expiryInput: $('#expiryInput'),
+      expiryWarning: $('#expiryWarning'),
       notFoundBtn: $('#notFoundBtn'),
       saveEntryBtn: $('#saveEntryBtn'),
       deleteEntryBtn: $('#deleteEntryBtn'),
@@ -21721,10 +22993,45 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
 
     function saveEntries(options = {}) {
       persistRecord(storagePrefix + 'entries:' + config.cabinetId, entries);
+      updateCabinetPickerState(config.cabinetId, {
+        hasData: hasInventoryData(entries),
+        savedAt: cabinetSaveStates[config.cabinetId]?.savedAt || ''
+      });
       if (!options.quiet) updateSaveStatus('盤點資料已暫存');
     }
 
+    function lastSaveKey(cabinetId = config?.cabinetId) {
+      return storagePrefix + 'lastSaveAt:' + (cabinetId || 'default');
+    }
+
+    async function loadLastSaveAt(cabinetId = config?.cabinetId) {
+      const key = lastSaveKey(cabinetId);
+      const dbValue = await dbGet(key).catch(() => null);
+      return dbValue || legacyGet(key) || '';
+    }
+
+    function formatLastSaveTime(value) {
+      const date = value ? new Date(value) : null;
+      if (!date || Number.isNaN(date.getTime())) return '尚未存檔';
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return '最後 ' + hours + ':' + minutes;
+    }
+
+    function updateLastSaveTime(value) {
+      const label = formatLastSaveTime(value);
+      dom.saveTimeText.textContent = label;
+      dom.saveMonitor.setAttribute('aria-label', label === '尚未存檔' ? '尚未存檔' : '最後存檔時間 ' + label.replace('最後 ', ''));
+    }
+
     function updateSaveStatus(text) {
+      const savedAt = new Date().toISOString();
+      persistRecord(lastSaveKey(), savedAt);
+      updateLastSaveTime(savedAt);
+      updateCabinetPickerState(config.cabinetId, {
+        hasData: hasInventoryData(entries),
+        savedAt
+      });
       dom.saveStatus.textContent = text + '，可離線使用';
       flashSaveMonitor();
       window.clearTimeout(updateSaveStatus.timer);
@@ -21747,6 +23054,174 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       return config.locations.find((location) => location.id === locationId);
     }
 
+    function hasInventoryData(value) {
+      return Object.values(value || {}).some((entry) => {
+        return Boolean(
+          entry
+          && (
+            entry.notFound
+            || String(entry.quantity || '').trim()
+            || String(entry.expiryDate || '').trim()
+            || normalizeCalcLines(entry.calcLines).length
+          )
+        );
+      });
+    }
+
+    function parseSavedDate(value) {
+      const date = value ? new Date(value) : null;
+      return date && !Number.isNaN(date.getTime()) ? date : null;
+    }
+
+    function formatDateOnly(value) {
+      const date = parseSavedDate(value);
+      if (!date) return '無日期紀錄';
+      return date.toLocaleDateString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+
+    async function findStaleInventoryRecords() {
+      const now = Date.now();
+      const staleRecords = [];
+      for (const cabinet of cabinetCollection) {
+        const cabinetId = cabinet.cabinetId;
+        const savedEntries = cabinetId === config.cabinetId ? entries : await loadEntries(cabinetId);
+        if (!hasInventoryData(savedEntries)) continue;
+        const savedAt = await loadLastSaveAt(cabinetId);
+        const savedDate = parseSavedDate(savedAt);
+        if (!savedDate || now - savedDate.getTime() > staleInventoryThresholdMs) {
+          staleRecords.push({
+            cabinet,
+            savedAt,
+            savedDate
+          });
+        }
+      }
+      return staleRecords;
+    }
+
+    async function maybePromptClearStaleInventoryData() {
+      if (staleInventoryPrompted) return;
+      staleInventoryPrompted = true;
+      const staleRecords = await findStaleInventoryRecords();
+      if (!staleRecords.length) return;
+      const oldestRecord = staleRecords.reduce((oldest, record) => {
+        if (!oldest) return record;
+        if (!oldest.savedDate) return oldest;
+        if (!record.savedDate) return record;
+        return record.savedDate < oldest.savedDate ? record : oldest;
+      }, null);
+      const names = staleRecords
+        .slice(0, 4)
+        .map((record) => record.cabinet.cabinetName)
+        .join('、');
+      const extra = staleRecords.length > 4 ? ' 等 ' + staleRecords.length + ' 台' : '';
+      const oldestText = oldestRecord ? formatDateOnly(oldestRecord.savedAt) : '無日期紀錄';
+      const shouldClear = confirm(
+        '偵測到這台裝置仍留有上次盤點資料，且最後存檔已超過 2 個月。\n\n'
+        + '涉及調劑台：' + names + extra + '\n'
+        + '最舊存檔：' + oldestText + '\n\n'
+        + '是否先清除舊資料，再開始本次盤點？\n'
+        + '按「取消」會保留目前資料。'
+      );
+      if (!shouldClear) return;
+      clearInventoryDataNow('已清除超過 2 個月的舊盤點資料');
+    }
+
+    function formatCabinetSavedStatus(state) {
+      if (!state?.hasData) return '未存';
+      const date = state.savedAt ? new Date(state.savedAt) : null;
+      if (!date || Number.isNaN(date.getTime())) return '有資料';
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return '已存 ' + hours + ':' + minutes;
+    }
+
+    function updateCabinetPickerState(cabinetId, state) {
+      if (!cabinetId) return;
+      cabinetSaveStates[cabinetId] = {
+        hasData: Boolean(state?.hasData),
+        savedAt: state?.savedAt || ''
+      };
+      renderCabinetPicker();
+    }
+
+    async function loadCabinetPickerState(cabinetId) {
+      const [savedAt, savedEntries] = await Promise.all([
+        loadLastSaveAt(cabinetId),
+        loadEntries(cabinetId)
+      ]);
+      return {
+        hasData: hasInventoryData(savedEntries),
+        savedAt: savedAt || ''
+      };
+    }
+
+    function renderCabinetPicker() {
+      if (!dom.cabinetPickerLabel || !dom.cabinetPickerMenu) return;
+      dom.cabinetPickerLabel.textContent = config.cabinetName;
+      dom.cabinetPickerBtn?.setAttribute('aria-label', '切換調劑台，目前是 ' + config.cabinetName);
+      dom.cabinetPickerMenu.innerHTML = cabinetCollection.map((cabinet) => {
+        const state = cabinetSaveStates[cabinet.cabinetId] || {};
+        const isCurrent = cabinet.cabinetId === config.cabinetId;
+        const classes = [
+          'cabinet-option',
+          isCurrent ? 'is-current' : '',
+          state.hasData ? 'has-saved' : ''
+        ].filter(Boolean).join(' ');
+        return `
+          <button class="${classes}" type="button" role="option" aria-selected="${isCurrent ? 'true' : 'false'}" data-cabinet-id="${escapeAttr(cabinet.cabinetId)}">
+            <span class="cabinet-option-name">${escapeHtml(cabinet.cabinetName)}</span>
+            <span class="cabinet-option-status">${escapeHtml(formatCabinetSavedStatus(state))}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function refreshCabinetPickerStates() {
+      const refreshId = ++cabinetStateRefreshId;
+      Promise.all(cabinetCollection.map(async (cabinet) => {
+        const state = await loadCabinetPickerState(cabinet.cabinetId);
+        return [cabinet.cabinetId, state];
+      })).then((states) => {
+        if (refreshId !== cabinetStateRefreshId) return;
+        cabinetSaveStates = Object.fromEntries(states);
+        renderCabinetPicker();
+      }).catch(() => {});
+    }
+
+    function setCabinetPickerOpen(open) {
+      if (!dom.cabinetPicker || !dom.cabinetPickerBtn) return;
+      window.clearTimeout(setCabinetPickerOpen.closeTimer);
+      if (open) {
+        closeSearch();
+        closeMobileActions();
+        if (currentLocationId) closeDrugList();
+        dom.cabinetPicker.classList.remove('closing');
+        dom.cabinetPicker.classList.add('is-open');
+        dom.cabinetPickerBtn.setAttribute('aria-expanded', 'true');
+        syncSceneFocus();
+        return;
+      }
+      dom.cabinetPickerBtn.setAttribute('aria-expanded', 'false');
+      if (!dom.cabinetPicker.classList.contains('is-open')) {
+        dom.cabinetPicker.classList.remove('closing');
+        syncSceneFocus();
+        return;
+      }
+      if (dom.cabinetPicker.classList.contains('closing')) return;
+      dom.cabinetPicker.classList.remove('is-open');
+      dom.cabinetPicker.classList.add('closing');
+      syncSceneFocus();
+      setCabinetPickerOpen.closeTimer = window.setTimeout(() => {
+        dom.cabinetPicker.classList.remove('closing');
+        syncSceneFocus();
+      }, 220);
+    }
+
     function renderCabinetSelectors() {
       const options = cabinetCollection.map((cabinet) => `
         <option value="${escapeAttr(cabinet.cabinetId)}">${escapeHtml(cabinet.cabinetName)}</option>
@@ -21757,6 +23232,8 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
         dom.mobileCabinetSelect.innerHTML = options;
         dom.mobileCabinetSelect.value = config.cabinetId;
       }
+      renderCabinetPicker();
+      refreshCabinetPickerStates();
     }
 
     function updateRetroClock() {
@@ -21767,13 +23244,65 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       dom.retroClockTime.parentElement?.setAttribute('aria-label', '現在時間 ' + hours + ':' + minutes);
     }
 
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      document.documentElement.classList.toggle('dark-theme', isDark);
+      dom.themeToggleBtn?.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+      dom.themeToggleBtn?.setAttribute('aria-label', isDark ? '切換淺色模式' : '切換深色模式');
+      dom.themeToggleBtn?.setAttribute('title', isDark ? '淺色模式' : '深色模式');
+    }
+
+    function loadThemePreference() {
+      const savedTheme = legacyGet(themeStorageKey);
+      applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
+    }
+
+    function toggleTheme() {
+      const nextTheme = document.documentElement.classList.contains('dark-theme') ? 'light' : 'dark';
+      applyTheme(nextTheme);
+      legacySet(themeStorageKey, nextTheme);
+      dbSet(themeStorageKey, nextTheme).catch(() => {});
+    }
+
+    function setPageScrollLocked(locked) {
+      const body = document.body;
+      const root = document.documentElement;
+      if (locked) {
+        if (body.classList.contains('scroll-locked')) return;
+        pageScrollLockY = window.scrollY || root.scrollTop || 0;
+        body.classList.add('scroll-locked');
+        body.style.position = 'fixed';
+        body.style.top = '-' + pageScrollLockY + 'px';
+        body.style.left = '0';
+        body.style.right = '0';
+        body.style.width = '100%';
+        body.style.overflow = 'hidden';
+        root.style.overflow = 'hidden';
+        return;
+      }
+      if (!body.classList.contains('scroll-locked')) return;
+      body.classList.remove('scroll-locked');
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      root.style.overflow = '';
+      const restoreY = pageScrollLockY;
+      pageScrollLockY = 0;
+      window.scrollTo(0, restoreY);
+    }
+
     function syncSceneFocus() {
       const adminOpen = dom.adminPanel.classList.contains('show') || dom.adminPanel.classList.contains('closing');
+      const cabinetPickerOpen = dom.cabinetPicker.classList.contains('is-open') || dom.cabinetPicker.classList.contains('closing');
       const modalOpen = dom.modal.classList.contains('show')
         || dom.modal.classList.contains('closing')
         || dom.tempDrugModal.classList.contains('show')
         || dom.tempDrugModal.classList.contains('closing');
       const hasFloatingCard = Boolean(currentLocationId)
+        || cabinetPickerOpen
         || adminOpen
         || modalOpen
         || dom.searchDock.classList.contains('is-open')
@@ -21783,6 +23312,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       document.body.classList.toggle('scene-focus', hasFloatingCard);
       document.body.classList.toggle('admin-focus', adminOpen);
       document.body.classList.toggle('modal-open', modalOpen);
+      setPageScrollLocked(modalOpen);
     }
 
     function setSearchOpen(open) {
@@ -21907,6 +23437,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       entries = await loadEntries(config.cabinetId);
       persistRecord(storagePrefix + 'lastCabinetId', config.cabinetId);
       renderAll();
+      updateLastSaveTime(await loadLastSaveAt(config.cabinetId));
       showToast('已切換到 ' + config.cabinetName);
     }
 
@@ -21928,9 +23459,53 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       return /^\d{2}\/\d{2}\/\d{2}$/.test(formatExpiryInput(value));
     }
 
+    function parseExpiryDate(value) {
+      const formatted = formatExpiryInput(value);
+      if (!/^\d{2}\/\d{2}\/\d{2}$/.test(formatted)) return null;
+      const [yy, mm, dd] = formatted.split('/').map(Number);
+      const date = new Date(2000 + yy, mm - 1, dd);
+      if (
+        date.getFullYear() !== 2000 + yy
+        || date.getMonth() !== mm - 1
+        || date.getDate() !== dd
+      ) return null;
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function getExpiryWarningText(value) {
+      const expiryDate = parseExpiryDate(value);
+      if (!expiryDate) return '';
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const sixMonthsLater = new Date(today);
+      sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+      if (expiryDate < today) return '效期已過';
+      if (expiryDate < sixMonthsLater) return '效期將近';
+      return '';
+    }
+
+    function updateExpiryWarning() {
+      const warningText = getExpiryWarningText(dom.expiryInput.value);
+      dom.expiryField?.classList.toggle('expiry-near', Boolean(warningText));
+      if (!dom.expiryWarning) return;
+      dom.expiryWarning.hidden = !warningText;
+      dom.expiryWarning.textContent = warningText || '效期將近';
+    }
+
     function isEntryDone(locationId, drugIndex) {
       const entry = entries[entryKey(locationId, drugIndex)];
       return Boolean(entry && (entry.notFound || (String(entry.quantity).trim() && isExpiryComplete(entry.expiryDate))));
+    }
+
+    function isEntryPartial(locationId, drugIndex) {
+      const entry = entries[entryKey(locationId, drugIndex)];
+      if (!entry || entry.notFound || isEntryDone(locationId, drugIndex)) return false;
+      return Boolean(
+        String(entry.quantity || '').trim()
+        || String(entry.expiryDate || '').trim()
+        || normalizeCalcLines(entry.calcLines).length
+      );
     }
 
     function isLocationDone(location) {
@@ -22149,12 +23724,22 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
         dom.drugStrip.innerHTML = location.items.map((item, index) => {
           const entry = entries[entryKey(location.id, index)];
           const done = isEntryDone(location.id, index);
+          const partial = isEntryPartial(location.id, index);
           const notFound = Boolean(entry?.notFound);
           const qty = notFound ? '找不到庫存' : (entry?.quantity ? escapeHtml(entry.quantity) : '未輸入');
           const expiry = notFound ? '不用填寫' : (entry?.expiryDate ? escapeHtml(formatExpiryInput(entry.expiryDate)) : '未輸入');
-          const statusText = notFound ? '找不到庫存' : (done ? '已完成' : '待輸入');
+          const statusText = notFound ? '找不到庫存' : (done ? '已完成' : (partial ? '未填完整' : '待輸入'));
+          const cardStateClass = done ? 'done' : (partial ? 'partial' : '');
+          const statusStateClass = done ? 'done' : (partial ? 'partial' : '');
+          const partialAlertIcon = partial ? `
+              <span class="drug-card-alert" aria-hidden="true">
+                <svg viewBox="0 -960 960 960" fill="currentColor">
+                  <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240ZM330-120 120-330v-300l210-210h300l210 210v300L630-120H330Zm34-80h232l164-164v-232L596-760H364L200-596v232l164 164Zm116-280Z"></path>
+                </svg>
+              </span>
+            ` : '';
           return `
-            <button class="drug-card ${done ? 'done' : ''}" data-drug-index="${index}">
+            <button class="drug-card ${cardStateClass}" data-drug-index="${index}">
               <span class="drug-title">
                 <span class="slot-badge">${escapeHtml(item.slotNo || '未設定')}</span><strong>${escapeHtml(item.drugName)}</strong>
               </span>
@@ -22162,7 +23747,8 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
                 數量：${qty}<br>
                 效期：${expiry}
               </span>
-              <span class="status-pill ${done ? 'done' : ''} ${notFound ? 'not-found' : ''}">${statusText}</span>
+              <span class="status-pill ${statusStateClass} ${notFound ? 'not-found' : ''}">${statusText}</span>
+              ${partialAlertIcon}
             </button>
           `;
         }).join('') + addCard;
@@ -22277,7 +23863,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
         dom.tempDrugModal.classList.remove('show', 'closing');
         tempDrugTargetLocationId = '';
         syncSceneFocus();
-      }, 200);
+      }, 250);
     }
 
     function autofillTempDrugName() {
@@ -22331,6 +23917,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       dom.qtyInput.value = entry.notFound ? '' : (entry.quantity || '');
       calcStartsNewDraft = activeCalcLines.length > 0;
       dom.expiryInput.value = entry.notFound ? '' : formatExpiryInput(entry.expiryDate || '');
+      updateExpiryWarning();
       dom.calcHistoryDetails.open = false;
       renderCalcHistory();
       window.clearTimeout(closeDrugModal.timer);
@@ -22422,6 +24009,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
 
     function handleExpiryInput(options = {}) {
       dom.expiryInput.value = formatExpiryInput(dom.expiryInput.value);
+      updateExpiryWarning();
       autoSaveDrugEntry(options);
     }
 
@@ -22429,6 +24017,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       if (!activeLocationId || activeDrugIndex < 0) return;
       dom.qtyInput.value = '';
       dom.expiryInput.value = '';
+      updateExpiryWarning();
       activeCalcLines = [];
       calcStartsNewDraft = false;
       entries[entryKey(activeLocationId, activeDrugIndex)] = {
@@ -22453,6 +24042,30 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       showToast('已清除本筆');
     }
 
+    function clearInventoryDataNow(statusText = '盤點資料已清除') {
+      closeDrugModalNow();
+      const cabinetIds = new Set([
+        config.cabinetId,
+        ...cabinetCollection.map((cabinet) => cabinet.cabinetId)
+      ].filter(Boolean));
+      cabinetIds.forEach((cabinetId) => {
+        removeRecord(storagePrefix + 'entries:' + cabinetId);
+      });
+      entries = {};
+      activeCalcLines = [];
+      calcStartsNewDraft = false;
+      cabinetSaveStates = Object.fromEntries([...cabinetIds].map((cabinetId) => [cabinetId, {
+        hasData: false,
+        savedAt: ''
+      }]));
+      renderDrugStrip();
+      renderSummary();
+      renderCabinetArt();
+      renderCabinetPicker();
+      updateSaveStatus(statusText);
+      showToast(statusText);
+    }
+
     function clearInventoryData() {
       if (!confirm('確定要清除這台裝置內所有調劑台的盤點資料？\n\n會清除數量、效期、找不到庫存標記；藥品位置設定會保留。')) return;
       closeDrugModalNow();
@@ -22466,9 +24079,14 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       entries = {};
       activeCalcLines = [];
       calcStartsNewDraft = false;
+      cabinetSaveStates = Object.fromEntries([...cabinetIds].map((cabinetId) => [cabinetId, {
+        hasData: false,
+        savedAt: ''
+      }]));
       renderDrugStrip();
       renderSummary();
       renderCabinetArt();
+      renderCabinetPicker();
       updateSaveStatus('盤點資料已清除');
       showToast('已清除盤點資料');
     }
@@ -23196,7 +24814,8 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       doc.querySelector('#drugModal')?.classList.remove('show', 'closing');
       doc.querySelector('#tempDrugModal')?.classList.remove('show', 'closing');
       doc.querySelector('#adminPanel')?.classList.remove('show', 'closing');
-      doc.querySelector('body')?.classList.remove('scene-focus', 'admin-focus', 'modal-open');
+      doc.querySelector('#cabinetPicker')?.classList.remove('is-open', 'closing');
+      doc.querySelector('body')?.classList.remove('scene-focus', 'admin-focus', 'modal-open', 'scroll-locked');
       const html = '<!doctype html>\n' + doc.outerHTML;
       downloadText(
         safeFileName(config.cabinetName || '調劑台盤點') + '_已綁定盤點網頁.html',
@@ -23267,6 +24886,7 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     }
 
     async function initApp() {
+      loadThemePreference();
       updateRetroClock();
       setInterval(updateRetroClock, 15000);
       itemMaster = await loadItemMaster();
@@ -23281,6 +24901,8 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       entries = await loadEntries(config.cabinetId);
       currentLocationId = '';
       renderAll();
+      updateLastSaveTime(await loadLastSaveAt(config.cabinetId));
+      await maybePromptClearStaleInventoryData();
     }
 
     dom.cabinetSvg.addEventListener('click', (event) => {
@@ -23354,11 +24976,22 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
       setMobileActionsOpen(false);
     }
 
+    function closeMobileActionsNow() {
+      window.clearTimeout(setMobileActionsOpen.closeTimer);
+      dom.mobileActionsToggle.setAttribute('aria-expanded', 'false');
+      dom.mobileActions.classList.remove('is-open', 'closing');
+      syncSceneFocus();
+    }
+
     function isInsideFloatingSurface(target) {
-      return Boolean(target.closest('#searchDock, #mobileActions, #workPanel, #adminPanel, .modal-backdrop.show'));
+      return Boolean(target.closest('#cabinetPicker, #searchDock, #mobileActions, #workPanel, #adminPanel, .modal-backdrop.show'));
     }
 
     function closeTopFloatingSurface() {
+      if (dom.cabinetPicker?.classList.contains('is-open')) {
+        setCabinetPickerOpen(false);
+        return true;
+      }
       if (dom.searchDock.classList.contains('is-open')) {
         closeSearch();
         return true;
@@ -23384,6 +25017,30 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     }
 
     document.addEventListener('click', consumeOutsideFloatingClick, true);
+
+    dom.themeToggleBtn.addEventListener('click', toggleTheme);
+    dom.cabinetPickerBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setCabinetPickerOpen(!dom.cabinetPicker.classList.contains('is-open'));
+    });
+    dom.cabinetPickerMenu.addEventListener('click', (event) => {
+      const option = event.target.closest('[data-cabinet-id]');
+      if (!option) return;
+      event.preventDefault();
+      setCabinetPickerOpen(false);
+      switchCabinet(option.dataset.cabinetId);
+    });
+    document.addEventListener('click', (event) => {
+      if (!dom.cabinetPicker.classList.contains('is-open')) return;
+      if (event.target.closest('#cabinetPicker')) return;
+      setCabinetPickerOpen(false);
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !dom.cabinetPicker.classList.contains('is-open')) return;
+      setCabinetPickerOpen(false);
+      dom.cabinetPickerBtn.focus();
+    });
 
     dom.adminToggleBtn.addEventListener('click', toggleAdminPanel);
     dom.mobileActionsToggle.addEventListener('click', (event) => {
@@ -23432,16 +25089,16 @@ Amoxicillin 250mg Cap    S1-02"></textarea>
     dom.shareCsvBtn.addEventListener('click', shareCsv);
     dom.clearInventoryBtn.addEventListener('click', clearInventoryData);
     dom.mobileExportCsvBtn.addEventListener('click', () => {
+      closeMobileActionsNow();
       exportCsv();
-      closeMobileActions();
     });
     dom.mobileShareCsvBtn.addEventListener('click', () => {
+      closeMobileActionsNow();
       shareCsv();
-      closeMobileActions();
     });
     dom.mobileClearInventoryBtn.addEventListener('click', () => {
+      closeMobileActionsNow();
       clearInventoryData();
-      closeMobileActions();
     });
     document.addEventListener('click', (event) => {
       if (!dom.mobileActions.classList.contains('is-open')) return;
